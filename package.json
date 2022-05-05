@@ -1,0 +1,25 @@
+{
+  "name": "casas_mirobriga",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "start": "parcel index.html --open",
+    "build": "parcel build index.html"
+  },
+  "dependencies": {
+    "@babel/runtime": "^7.17.9",
+    "babel-polyfill": "^6.26.0",
+    "octree-helper": "^1.1.6",
+    "regenerator-runtime": "^0.13.9",
+    "stats-js": "^1.0.1",
+    "three-nebula": "7.0.2",
+    "three-octree": "^0.6.1"
+  },
+  "devDependencies": {
+    "@babel/core": "7.2.0",
+    "parcel-bundler": "^1.6.1",
+    "three": "^0.139.2",
+    "three-pointer-lock-controls": "^1.0.0"
+  }
+}
