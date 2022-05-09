@@ -1,6 +1,7 @@
 import Nebula, { SpriteRenderer } from 'three-nebula'
 import json from './fire.json'
-import modelos from '../OneDrive - IPLeiria/Projeto Informático/Modelos glb/modelos.glb'
+import modelos from './Modelos_glb/modelos.glb'
+import { Sky } from 'three/examples/jsm/objects/Sky.js';
 
 let camera, scene, renderer, controls, stats, fireLight;
 
@@ -11,6 +12,9 @@ let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
 let canJump = false;
+
+let hour = 12;
+let sky, sun;
 
 const cameraFloorDistance = 1.3;
 const cameraColisionDistance = 0.2;
@@ -44,6 +48,11 @@ function init() {
     scene.background = new THREE.Color( 0x001844 );
     scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
 
+    
+    sky = new Sky();
+	sky.scale.setScalar( 450000 );
+	scene.add( sky );
+
     const hemisphereLight = new THREE.HemisphereLight( 0xeeeeff, 0x777788, 0.75 );
     hemisphereLight.position.set( 0.5, 1, 0.75 );
     scene.add( hemisphereLight );
@@ -52,12 +61,13 @@ function init() {
     scene.add( ambientLight );
 
     const directionalLight = new THREE.DirectionalLight( 0xffffff, 1 );  
-    directionalLight.position.set( 0.1, 1, 0.95 );
+    directionalLight.position.set( 0, (hour>4&&hour<20)?1:-1, (hour>12)?12-(hour/2):12-hour);
     directionalLight.position.multiplyScalar( 30 );
     directionalLight.castShadow = true;
     scene.add( directionalLight );
     directionalLight.shadow.mapSize.width = 2048;
 	directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.intensity = (hour>4&&hour<20)?1:0;
     const d = 50;
     directionalLight.shadow.camera.left = - d;
     directionalLight.shadow.camera.right = d;
@@ -68,6 +78,26 @@ function init() {
 
     const dirLightHelper = new THREE.DirectionalLightHelper( directionalLight, 10 );
     scene.add( dirLightHelper );
+
+
+    
+    const directionalLightMoon = new THREE.DirectionalLight( 0x506886, 1 );  
+    directionalLightMoon.position.set( 0, (hour>4&&hour<20)?-1:1, (hour>12)?12-hour:12-(hour/2));
+    directionalLightMoon.position.multiplyScalar( 30 );
+    directionalLightMoon.castShadow = true;
+    scene.add( directionalLightMoon );
+    directionalLightMoon.shadow.mapSize.width = 2048;
+	directionalLightMoon.shadow.mapSize.height = 2048;
+    directionalLightMoon.intensity = (hour>4&&hour<20)?0:1;
+    directionalLightMoon.shadow.camera.left = - d;
+    directionalLightMoon.shadow.camera.right = d;
+    directionalLightMoon.shadow.camera.top = d;
+    directionalLightMoon.shadow.camera.bottom = - d;
+    directionalLightMoon.shadow.camera.far = 3500;
+    directionalLightMoon.shadow.bias = - 0.0001;
+
+    const dirLightHelperMoon = new THREE.DirectionalLightHelper( directionalLightMoon, 10 );
+    scene.add( dirLightHelperMoon );
 
     fireLight = new THREE.PointLight( 0xFFB900, 1, 100 );
     scene.add( fireLight );
@@ -215,8 +245,6 @@ function animate(nebula, app) {
 
     requestAnimationFrame(() => animate(nebula, app))
     nebula.update();
-
-    fireLight.intensity = Math.random() * (1 - 0.8) + 0.8;
 
     const time = performance.now();
 
