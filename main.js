@@ -1,6 +1,7 @@
+import * as THREE from 'three'
 import Nebula, { SpriteRenderer } from 'three-nebula'
 import json from './fire.json'
-import modelos from './Modelos_glb/modelos.glb'
+import modelos from './Modelos_glb/modelos.gltf'
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 
 let camera, scene, renderer, controls, stats, fireLight;
