@@ -4,3 +4,4 @@ node_modules
 text
 *.glb
 *.gltf
+*.7z
