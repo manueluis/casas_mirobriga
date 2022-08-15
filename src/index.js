@@ -6,9 +6,16 @@ import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
-import { Vector2 } from 'three';
+import { TetrahedronBufferGeometry, Vector2, Vector4 } from 'three';
+import { Box3 } from 'three';
+import { Mesh } from 'three';
+import { SphereGeometry } from 'three';
+import { Vector3 } from 'three';
+import { ObjectLoader } from 'three';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import { startTransition } from 'react';
 
-let camera, scene, renderer, controls, fireLight, skyGeo;
+let camera, scene, renderer, controls, fireLight, skyGeo, particles;
 
 const objects = [];
 
@@ -19,6 +26,10 @@ let moveRight = false;
 let canJump = false;
 let starsInited = false;
 let cloudsInited = false;
+let primeiroCarregamento = false;
+let hemisphereLight;
+let ambientLight;
+let directionalLight;
 
 let intersetado;
 
@@ -50,16 +61,25 @@ Nebula.fromJSONAsync(json, THREE).then(loaded => {
 
 function init() {
     camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.01, 6000 + hour * 5);
-    camera.position.y = cameraFloorDistance;
+    camera.position.y = cameraFloorDistance + 10;
     camera.position.x = 0;
     camera.position.z = 0;
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x001844);
 
-    initSky();
     initLights();
-    initLoaders();
+    initSky();
+    loadGLB('../Modelos_glb/modelos.glb', 0, 0, 0, 0);
+    //loadGLB('../Modelos_glb/Moinho.glb', 0, -45, 0);
+    loadGLB('../Modelos_glb/Tabernae.glb', 34.64, 2.55, -13.8, Math.PI * (1 / 6));
+    loadGLB('../Modelos_glb/Bancada.glb', 30.3652, 2.7, -14.3674, Math.PI * (1 / 6));
+    loadGLB('../Modelos_glb/Escada.glb', 27.588, 2.7418, -18.129, Math.PI * (1 / 6));
+    loadGLB('../Modelos_glb/Escada.glb', 34.449, 2.7418, -22.103, Math.PI * (1 / 6));
+    //loadGLB('../Modelos_glb/Telhas.glb', 30.35, 4.58, -11.1, Math.PI * (1 / 6))
+    //loadGLB('../Modelos_glb/untitled.glb', 0, 4, 0, Math.PI * (1 / 6))
+    //loadOBJ();
+    //generateWalls();
 
     controls = new PointerLockControls(camera, document.body);
 
@@ -118,6 +138,9 @@ function init() {
             case 'KeyF':
                 hotspotTest();
                 break;
+            case 'KeyG':
+                console.log(controls.getObject().position);
+                break;
         }
         if (event.shiftKey) velocityScalar = 80;
 
@@ -155,7 +178,8 @@ function init() {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
-    generateHotSpot(0, -5, 20, -Math.PI / 2, '../images/teste.png')
+    generateHotSpot(0, -48, 20, -Math.PI / 2, '../images/teste.png')
+    console.log(scene)
 }
 
 //Ceu
@@ -171,9 +195,9 @@ function initSky() {
         rayleigh: 0.75,
         mieCoefficient: 0.005,
         mieDirectionalG: 0.85,
-        elevation: (hour > 18) ? 315 - hour*15 : -90 + hour*15,
+        elevation: (hour > 18) ? 315 - hour * 15 : -90 + hour * 15,
         azimuth: 180,
-        hourEC:hour
+        hourEC: hour
     };
 
     console.log(effectController.elevation);
@@ -186,12 +210,15 @@ function initSky() {
 
     function guiChanged() {
         hour = effectController.hourEC;
-        effectController.elevation = (hour > 12) ? 90 + (hour-12)*11.25 : -90 + hour*15,
-        uniforms[ 'sunPosition' ].value.copy( sun );
+        effectController.elevation = (hour > 12) ? 90 + (hour - 12) * 11.25 : -90 + hour * 15,
+            uniforms['sunPosition'].value.copy(sun);
 
         const phi = THREE.MathUtils.degToRad(90 - effectController.elevation);
         const theta = THREE.MathUtils.degToRad(effectController.azimuth);
 
+        ambientLight.intensity = (hour > 12) ? 1.2 - hour * 0.025 : 0.6 + hour * 0.025;
+        directionalLight.intensity = (hour > 12) ? 1.2 - hour * 0.025 : 0.6 + hour * 0.025;
+        hemisphereLight.intensity = (hour > 12) ? 1.2 - hour * 0.025 : 0.6 + hour * 0.025;
         sun.setFromSphericalCoords(1, phi, theta);
         uniforms['sunPosition'].value.copy(sun);
         changeStars();
@@ -199,20 +226,20 @@ function initSky() {
     }
 
     const gui = new GUI();
-    gui.add( effectController, 'hourEC', 0, 24, 1 ).onChange( guiChanged );
+    gui.add(effectController, 'hourEC', 0, 24, 1).onChange(guiChanged);
     guiChanged();
 }
 
 //Luzes
 function initLights() {
-    const hemisphereLight = new THREE.HemisphereLight(0xeeeeff, 0x777788, 0.75);
+    hemisphereLight = new THREE.HemisphereLight(0xeeeeff, 0x777788, 0.75);
     hemisphereLight.position.set(0.5, 1, 0.75);
     scene.add(hemisphereLight);
 
-    const ambientLight = new THREE.AmbientLight(0x404040); // soft white light
+    ambientLight = new THREE.AmbientLight(0x404040); // soft white light
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(0, 1000, 0);
     directionalLight.target = camera;
     directionalLight.position.multiplyScalar(30);
@@ -232,29 +259,91 @@ function initLights() {
     scene.add(fireLight);
 }
 
-function initLoaders() {
+function loadOBJ() {
+    var textureLoader = new THREE.TextureLoader();
+
+    var map1001 = textureLoader.load("../images/1001.png");
+    map1001.wrapS = map1001.wrapT = THREE.ClampToEdgeWrapping;
+    var material1001 = new THREE.MeshPhongMaterial({ map: map1001 });
+    var map1002 = textureLoader.load("../images/1002.png");
+    map1002.wrapS = map1002.wrapT = THREE.ClampToEdgeWrapping;
+    var material1002 = new THREE.MeshPhongMaterial({ map: map1002 });
+    var map1003 = textureLoader.load("../images/1003.png");
+    map1003.wrapS = map1003.wrapT = THREE.ClampToEdgeWrapping;
+    var material1003 = new THREE.MeshPhongMaterial({ map: map1003 });
+    var map1011 = textureLoader.load("../images/1011.png");
+    map1011.wrapS = map1011.wrapT = THREE.ClampToEdgeWrapping;
+    var material1011 = new THREE.MeshPhongMaterial({ map: map1011 });
+    var map1012 = textureLoader.load("../images/1012.png");
+    map1012.wrapS = map1012.wrapT = THREE.ClampToEdgeWrapping;
+    var material1012 = new THREE.MeshPhongMaterial({ map: map1012 });
+    var map1013 = textureLoader.load("../images/1013.png");
+    map1013.wrapS = map1013.wrapT = THREE.ClampToEdgeWrapping;
+    var material1013 = new THREE.MeshPhongMaterial({ map: map1013 });
+
+    var loader = new OBJLoader();
+    loader.load("../Modelos_glb/untitled.obj", function (object) {
+        object.rotateY(90);
+        object.position.set(0, 4, 0);
+        scene.add(object);
+        objects.push(object)
+        console.log(object)
+        object.traverse(function (node) {
+            console.log(node)
+            if (node.isMesh) {
+                if (node.name == "1001") {
+                    node.material = material1001;
+                    console.log("1001")
+                } else if (node.name == "1002") {
+                    node.material = material1002;
+                    console.log("1002")
+                } else if (node.name == "1003") {
+                    node.material = material1003;
+                    console.log("1003")
+                } else if (node.name == "1011") {
+                    node.material = material1011;
+                    console.log("1011")
+                } else if (node.name == "1012") {
+                    node.material = material1012;
+                    console.log("1012")
+                } else if (node.name == "1013") {
+                    node.material = material1013;
+                    console.log("1013")
+                }
+            }
+        })
+    });
+}
+
+function loadGLB(modelo, x, y, z, rotation) {
+    console.log("A carregar '" + modelo + "' nas coordenadas (" + x + "," + y + "," + z + ").")
     var carregador = new GLTFLoader()
     carregador.load(
-        modelos,
+        modelo,
         function (gltf) {
             scene.add(gltf.scene)
             gltf.scene.children.forEach(function (child) {
                 child.castShadow = true;
                 child.receiveShadow = true;
+                child.position.set(x, y, z)
+                child.rotateY(rotation);
                 objects.push(child)
             })
         }
     )
+    if (!primeiroCarregamento) {
+        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+        primeiroCarregamento = true;
+    }
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-
-    document.body.appendChild(renderer.domElement);
+    console.log("Modelo carregado...")
 }
 
-function changeClouds(){
+function changeClouds() {
     if ((hour <= 21 && hour >= 3) && !cloudsInited) {
         cloudsInited = true;
         const loader = new THREE.TextureLoader();
@@ -270,7 +359,7 @@ function changeClouds(){
                     map: texture,
                     transparent: true,
                     depthWrite: false,
-                    opacity: (hour<12)?hour/12:24/hour
+                    opacity: (hour < 12) ? hour / 12 : 24 / hour
                 });
 
                 for (let p = 0, l = 50; p < l; p++) {
@@ -295,24 +384,48 @@ function changeClouds(){
         clouds = [];
         cloudsInited = false;
     } else {
-        clouds.forEach(cloud => cloud.material.opacity = (-Math.pow(hour-13, 2)/49 + 1));
-    }  
+        clouds.forEach(cloud => cloud.material.opacity = (-Math.pow(hour - 13, 2) / 49 + 1));
+    }
 }
 
-function changeStars(){
+function changeStars() {
     if ((hour > 19 || hour < 8) && !starsInited) {
         starsInited = true;
+
+        let geometry = new THREE.BufferGeometry();
+
+        let material = new THREE.PointsMaterial( { size: 2, sizeAttenuation: false, transparent: true } );
+        material.color.setHex(  );
+		material.color.set( new THREE.Color(255, 205, 60))
+
+        let verticesNTyped = []
+        let vertice = new THREE.Vector3();
+        for (let i = 0; i < 1000; i ++ ) {
+            vertice.setFromSpherical(new THREE.Spherical(3000 + 5 * Math.random(), 2 * Math.PI * Math.random(), Math.PI * Math.random()))
+            verticesNTyped.push(vertice.x);
+            verticesNTyped.push(vertice.y);
+            verticesNTyped.push(vertice.z);
+            
+        }
+        let vertices = new Float32Array(verticesNTyped)
+
+        geometry.setAttribute( 'position', new THREE.BufferAttribute(vertices, 3))
+
+        particles = new THREE.Points( geometry, material );
+        scene.add( particles );
+
+        /* starsInited = true;
         for (let i = 1; i < 800; i++) {
             let geometry = new THREE.SphereGeometry(2 + Math.random() * 3, 6, 6);
             let material = new THREE.MeshBasicMaterial({
                 color: new THREE.Color(255, 205, 60)
             });
-
+    
             let sphere = new THREE.Mesh(geometry, material);
             scene.add(sphere);
             spheres.push(sphere);
-            sphere.position.setFromSpherical(new THREE.Spherical(3000 + 5 * Math.random(), 2 * Math.PI * Math.random(), 2 * Math.PI * Math.random()))
-        }
+            sphere.position.setFromSpherical(new THREE.Spherical(3000 + 5 * Math.random(), 2 * Math.PI * Math.random(), Math.PI * Math.random()))
+        } */
     } else if (hour >= 8 && hour <= 19) {
         spheres.forEach(star => scene.remove(star));
         spheres = [];
@@ -320,13 +433,23 @@ function changeStars(){
     }
 }
 
+function generateWalls() {
+    let geometry = new THREE.BoxGeometry(100, 100, 100);
+    let material = new THREE.MeshBasicMaterial({
+    })
+
+    let cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+    objects.push(cube);
+}
+
 //Hotspots
-function generateHotSpot(positionx, positiony, positionz, rotation, image){
+function generateHotSpot(positionx, positiony, positionz, rotation, image) {
     var texture = new THREE.TextureLoader().load(image);
     var material = new THREE.MeshBasicMaterial({
-      map: texture
+        map: texture
     });
-    var geometry = new THREE.BoxGeometry(0, 5, 10);                                                             
+    var geometry = new THREE.BoxGeometry(0, 5, 10);
     var mesh = new THREE.Mesh(geometry, material);
     var s = 0.5;
     mesh.scale.set(s, s, s);
@@ -339,7 +462,7 @@ function generateHotSpot(positionx, positiony, positionz, rotation, image){
 
     texture = new THREE.TextureLoader().load('../images/info.png');
     material = new THREE.MeshBasicMaterial({
-      map: texture
+        map: texture
     });
     geometry = new THREE.CircleGeometry(0.8, 32);
     mesh = new THREE.Mesh(geometry, material);
@@ -362,13 +485,13 @@ function onWindowResize() {
 function hotspotTest() {
     console.log("test")
     var raycasterHotspot = new THREE.Raycaster();
-    raycasterHotspot.setFromCamera(new Vector2(0,0),camera);
+    raycasterHotspot.setFromCamera(new Vector2(0, 0), camera);
 
     const hotspotIntersection = raycasterHotspot.intersectObjects(objectsHotspot);
     console.log(raycasterHotspot)
-    if(hotspotIntersection.length > 0) {
+    if (hotspotIntersection.length > 0) {
         console.log(hotspotIntersection[0])
-        if(hotspotIntersection[0].distance <= 10){
+        if (hotspotIntersection[0].distance <= 10) {
             console.log("a mostrar")
             intersetado = hotspotIntersection[0].object;
             intersetado.visible = true;
@@ -413,7 +536,7 @@ function animate(nebula, app) {
     const time = performance.now();
 
     objectsHotspot.forEach(object => {
-        if(object.visible && controls.getObject().position.distanceTo(object.position)>10){
+        if (object.visible && controls.getObject().position.distanceTo(object.position) > 10) {
             object.visible = false;
         }
     });
@@ -488,7 +611,7 @@ function animate(nebula, app) {
                     controls.moveRight(- distanceX);
                     controls.moveForward(- distanceY);
                 } else {
-                    if (intersectionsDown[0].distance > cameraFloorDistance - 0.4) {
+                    if (intersectionsDown[0].distance > cameraFloorDistance - 0.6) {
                         controls.getObject().position.y = intersectionsDown[0].point.y + cameraFloorDistance;
                         velocity.y = 0;
                         canJump = true;
@@ -509,8 +632,6 @@ function animate(nebula, app) {
     }
 
     prevTime = time;
-
-    nebula.update();
 
     renderer.render(scene, camera);
 

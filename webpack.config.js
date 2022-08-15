@@ -8,7 +8,7 @@ module.exports = {
             test: /\.(png|jpe?g|gif|glb|gltf)$/i,
             loader: 'file-loader',
             options: {
-                publicPath: './',
+                publicPath: './Modelos_glb',
                 name: '[name].[ext]'
             },
             }
