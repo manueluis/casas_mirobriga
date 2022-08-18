@@ -15,7 +15,7 @@ import { ObjectLoader } from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { startTransition } from 'react';
 
-let camera, scene, renderer, controls, fireLight, skyGeo, particles;
+let camera, scene, renderer, controls, fireLight, skyGeo, stars;
 
 const objects = [];
 
@@ -69,6 +69,8 @@ function init() {
     scene.background = new THREE.Color(0x001844);
 
     initLights();
+    initStars();
+    initClouds();
     initSky();
     loadGLB('../Modelos_glb/modelos.glb', 0, 0, 0, 0);
     //loadGLB('../Modelos_glb/Moinho.glb', 0, -45, 0);
@@ -78,7 +80,7 @@ function init() {
     loadGLB('../Modelos_glb/Escada.glb', 34.449, 2.7418, -22.103, Math.PI * (1 / 6));
     //loadGLB('../Modelos_glb/Telhas.glb', 30.35, 4.58, -11.1, Math.PI * (1 / 6))
     //loadGLB('../Modelos_glb/untitled.glb', 0, 4, 0, Math.PI * (1 / 6))
-    //loadOBJ();
+    loadOBJ();
     //generateWalls();
 
     controls = new PointerLockControls(camera, document.body);
@@ -195,12 +197,10 @@ function initSky() {
         rayleigh: 0.75,
         mieCoefficient: 0.005,
         mieDirectionalG: 0.85,
-        elevation: (hour > 18) ? 315 - hour * 15 : -90 + hour * 15,
+        elevation: (hour > 12) ? 90 + (hour - 12) * 11.25 : -90 + hour * 15,
         azimuth: 180,
         hourEC: hour
     };
-
-    console.log(effectController.elevation);
 
     const uniforms = sky.material.uniforms;
     uniforms['turbidity'].value = effectController.turbidity;
@@ -211,7 +211,7 @@ function initSky() {
     function guiChanged() {
         hour = effectController.hourEC;
         effectController.elevation = (hour > 12) ? 90 + (hour - 12) * 11.25 : -90 + hour * 15,
-            uniforms['sunPosition'].value.copy(sun);
+        uniforms['sunPosition'].value.copy(sun);
 
         const phi = THREE.MathUtils.degToRad(90 - effectController.elevation);
         const theta = THREE.MathUtils.degToRad(effectController.azimuth);
@@ -281,6 +281,62 @@ function loadOBJ() {
     map1013.wrapS = map1013.wrapT = THREE.ClampToEdgeWrapping;
     var material1013 = new THREE.MeshPhongMaterial({ map: map1013 });
 
+    const loader2 = new THREE.CubeTextureLoader();
+loader2.setPath( './' );
+
+const textureCube = loader2.load( [
+	'../images/1001.png', '../images/1011.png',
+	'../images/1002.png', '../images/1012.png',
+	'../images/1003.png', '../images/1013.png'
+] );
+textureCube.mapping = THREE.UVMapping;
+
+const material2 = new THREE.MeshBasicMaterial( { envMap: textureCube } );
+
+/*const texture = new THREE.Texture();
+
+    let urls = [
+        '../images/1001.png', '../images/1011.png',
+        '../images/1002.png', '../images/1012.png',
+        '../images/1003.png', '../images/1013.png'
+    ];
+
+    const loader2 = new THREE.ImageLoader();
+
+
+    for ( let i = 0; i < urls.length; ++ i ) {
+
+        loader2.load( urls[ i ], function ( image ) {
+
+            texture.images[ i ] = image;
+
+                texture.needsUpdate = true;
+
+
+
+        })
+
+    }
+
+    
+texture.mapping = THREE.CubeReflectionMapping;
+texture.isCubeTexture = true;
+
+		texture.flipY = false;
+
+const material2 = new THREE.MeshPhongMaterial( { envMap: texture } );
+*/
+/*
+var textureLoader2 = new THREE.TextureLoader();
+const textureCube = textureLoader2.load( [
+	'../images/1001.png', '../images/1011.png',
+	'../images/1002.png', '../images/1012.png',
+	'../images/1003.png', '../images/1013.png'
+] );
+
+const material2 = new THREE.MeshPhongMaterial( { envMap: textureCube } );
+*/
+
     var loader = new OBJLoader();
     loader.load("../Modelos_glb/untitled.obj", function (object) {
         object.rotateY(90);
@@ -290,7 +346,8 @@ function loadOBJ() {
         console.log(object)
         object.traverse(function (node) {
             console.log(node)
-            if (node.isMesh) {
+            node.material = material2;
+            /*if (node.isMesh) {
                 if (node.name == "1001") {
                     node.material = material1001;
                     console.log("1001")
@@ -310,7 +367,7 @@ function loadOBJ() {
                     node.material = material1013;
                     console.log("1013")
                 }
-            }
+            }*/
         })
     });
 }
@@ -343,94 +400,71 @@ function loadGLB(modelo, x, y, z, rotation) {
     console.log("Modelo carregado...")
 }
 
-function changeClouds() {
-    if ((hour <= 21 && hour >= 3) && !cloudsInited) {
-        cloudsInited = true;
-        const loader = new THREE.TextureLoader();
+function initClouds() {
+    const loader = new THREE.TextureLoader();
 
-        loader.crossOrigin = '';
+    loader.crossOrigin = '';
 
-        loader.load(
-            '../images/cloud.png',
-            function onLoad(texture) {
-                const cloudGeo = new THREE.CircleBufferGeometry((Math.random() * 600) + 450, (Math.random() * 600) + 450);
+    loader.load(
+        '../images/cloud.png',
+        function onLoad(texture) {
+            const cloudGeometry = new THREE.CircleBufferGeometry((Math.random() * 600) + 450, (Math.random() * 600) + 450);// pk é que tem o random????
 
-                cloudMaterial = new THREE.MeshBasicMaterial({
-                    map: texture,
-                    transparent: true,
-                    depthWrite: false,
-                    opacity: (hour < 12) ? hour / 12 : 24 / hour
-                });
+            cloudMaterial = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                depthWrite: false,
+                opacity: (hour < 12) ? hour / 12 : 24 / hour
+            });
 
-                for (let p = 0, l = 50; p < l; p++) {
-                    let cloud = new THREE.Mesh(cloudGeo, cloudMaterial);
+            for (let p = 0, l = 50; p < l; p++) {
+                let cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
 
-                    cloud.rotateX(Math.PI / 2);
+                cloud.rotateX(Math.PI / 2);
 
-                    cloud.position.set(
-                        (Math.random() * 6000) - 3000,
-                        400 + Math.random() * 200,
-                        (Math.random() * 6000) - 3000
-                    );
+                cloud.position.set(
+                    (Math.random() * 6000) - 3000,
+                    400 + Math.random() * 200,
+                    (Math.random() * 6000) - 3000
+                );
 
-                    cloud.rotation.z = Math.random() * 360;
-                    scene.add(cloud);
-                    clouds.push(cloud);
-                }
+                cloud.rotation.z = Math.random() * 360;
+                scene.add(cloud);
+                clouds.push(cloud);
             }
-        );
-    } else if (hour > 21 || hour < 3) {
-        clouds.forEach(cloud => scene.remove(cloud));
-        clouds = [];
-        cloudsInited = false;
-    } else {
-        clouds.forEach(cloud => cloud.material.opacity = (-Math.pow(hour - 13, 2) / 49 + 1));
+        }
+    );
+}
+
+function changeClouds() {
+        clouds.forEach(cloud => cloud.material.opacity = (0.7*Math.exp(-Math.pow(hour - 12, 8)/Math.pow(5, 8)) + 0.05));
+}
+
+function initStars(){
+    let geometry = new THREE.BufferGeometry();
+
+    let material = new THREE.PointsMaterial( { size: 2, sizeAttenuation: false, transparent: true } );
+    material.color.set( new THREE.Color(255, 205, 60))
+
+    let verticesNTyped = []
+    let vertice = new THREE.Vector3();
+    for (let i = 0; i < 1000; i ++ ) {
+        vertice.setFromSpherical(new THREE.Spherical(3000, (Math.random() > 0.5) ? (-(Math.PI/2) * (Math.sqrt(Math.random()) - 1) + Math.PI*3/2) : (-(Math.PI/2) * (-Math.sqrt(Math.random()) - 1) + Math.PI*3/2) , Math.PI * Math.random()))
+        verticesNTyped.push(vertice.x);
+        verticesNTyped.push(vertice.y);
+        verticesNTyped.push(vertice.z);
+        
     }
+    let vertices = new Float32Array(verticesNTyped)
+
+    geometry.setAttribute( 'position', new THREE.BufferAttribute(vertices, 3))
+
+    stars = new THREE.Points( geometry, material );
+    scene.add( stars );
 }
 
 function changeStars() {
-    if ((hour > 19 || hour < 8) && !starsInited) {
-        starsInited = true;
-
-        let geometry = new THREE.BufferGeometry();
-
-        let material = new THREE.PointsMaterial( { size: 2, sizeAttenuation: false, transparent: true } );
-        material.color.setHex(  );
-		material.color.set( new THREE.Color(255, 205, 60))
-
-        let verticesNTyped = []
-        let vertice = new THREE.Vector3();
-        for (let i = 0; i < 1000; i ++ ) {
-            vertice.setFromSpherical(new THREE.Spherical(3000 + 5 * Math.random(), 2 * Math.PI * Math.random(), Math.PI * Math.random()))
-            verticesNTyped.push(vertice.x);
-            verticesNTyped.push(vertice.y);
-            verticesNTyped.push(vertice.z);
-            
-        }
-        let vertices = new Float32Array(verticesNTyped)
-
-        geometry.setAttribute( 'position', new THREE.BufferAttribute(vertices, 3))
-
-        particles = new THREE.Points( geometry, material );
-        scene.add( particles );
-
-        /* starsInited = true;
-        for (let i = 1; i < 800; i++) {
-            let geometry = new THREE.SphereGeometry(2 + Math.random() * 3, 6, 6);
-            let material = new THREE.MeshBasicMaterial({
-                color: new THREE.Color(255, 205, 60)
-            });
-    
-            let sphere = new THREE.Mesh(geometry, material);
-            scene.add(sphere);
-            spheres.push(sphere);
-            sphere.position.setFromSpherical(new THREE.Spherical(3000 + 5 * Math.random(), 2 * Math.PI * Math.random(), Math.PI * Math.random()))
-        } */
-    } else if (hour >= 8 && hour <= 19) {
-        spheres.forEach(star => scene.remove(star));
-        spheres = [];
-        starsInited = false;
-    }
+        stars.material.opacity = Math.min(Math.pow((hour-12)/6, 6), 1)
 }
 
 function generateWalls() {
