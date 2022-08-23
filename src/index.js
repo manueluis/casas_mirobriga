@@ -303,12 +303,12 @@ function initSky() {
     sun = new THREE.Vector3();
 
     const effectController = {
-        turbidity: Math.exp(-Math.pow(hour - (hour<12) ? 6 : 18, 6)) * 0.4,
-        rayleigh: Math.exp(-Math.pow(hour - (hour<12) ? 6 : 18, 6)) * 3.8 + 0.2,
+        turbidity: Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 0.4,
+        rayleigh: Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 3.8 + 0.2,
         mieCoefficient: 0.2,
         mieDirectionalG: 0.999,
-        elevation: (hour > 18) ? 315 - hour * 15 : -90 + hour * 15,
-        azimuth: 180,
+        elevation: -((Math.abs(Math.pow(hour-((Math.round(hour/12))*12), 3)))/2.7)+80,
+        azimuth: (Math.sin((Math.PI*(hour-((Math.round(hour/12))*12)))/12)*90)+90,
         hourEC: hour,
         exposure: Math.exp(-Math.pow(((hour-12)/5.7),20))* 0.97 + 0.03
     };
@@ -323,15 +323,18 @@ function initSky() {
 
     function guiChanged() {
         hour = effectController.hourEC;
-        effectController.elevation = (hour > 12) ? 90 + (hour - 12) * 11.25 : -90 + hour * 15,
-            uniforms['sunPosition'].value.copy(sun);
+        effectController.elevation = -((Math.abs(Math.pow(hour-((Math.round(hour/12))*12), 3)))/2.7)+80;
+        effectController.azimuth = (Math.sin((Math.PI*(hour-((Math.round(hour/12))*12)))/12)*90)+90;
+        uniforms['sunPosition'].value.copy(sun);
 
-        uniforms['turbidity'].value = Math.exp(-Math.pow(hour - (hour<12) ? 6 : 18, 6)) * 0.4;
-        uniforms['rayleigh'].value = Math.exp(-Math.pow(hour - (hour<12) ? 6 : 18, 6)) * 3.8 + 0.2;
-        renderer.toneMappingExposure = Math.exp(-Math.pow(((hour-12)/5.7),20))* 0.97 + 0.03;
-
-        console.log(effectController.turbidity);
-        console.log(effectController.rayleigh);
+        effectController.turbidity = Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 0.4;
+        uniforms['turbidity'].value = effectController.turbidity;
+        
+        effectController.rayleigh = Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 3.8 + 0.2;
+        uniforms['rayleigh'].value = effectController.rayleigh;
+        
+        effectController.exposure = Math.exp(-Math.pow(((hour-12)/5.7),20))* 0.97 + 0.03;
+        renderer.toneMappingExposure = effectController.exposure;
 
         const phi = THREE.MathUtils.degToRad(90 - effectController.elevation);
         const theta = THREE.MathUtils.degToRad(effectController.azimuth);
