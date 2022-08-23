@@ -36,6 +36,7 @@ const cameraFloorDistance = 1.3;
 const cameraColisionDistance = 0.2;
 const cameraMass = 10;
 let velocityScalar = 40;
+let cloudTicker = 0;
 let prevTime = performance.now();
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
@@ -60,7 +61,6 @@ function init() {
     scene.background = new THREE.Color(0x001844);
 
     initLights();
-    initSky();
     loadGLB('../Modelos_glb/modelos.glb', 0, 0, 0, 0);
     //loadGLB('../Modelos_glb/Moinho.glb', 0, -45, 0);
     loadGLB('../Modelos_glb/Tabernae.glb', 34.64, 2.55, -13.8, Math.PI * (1 / 6));
@@ -70,6 +70,7 @@ function init() {
     //loadGLB('../Modelos_glb/Telhas.glb', 30.35, 4.58, -11.1, Math.PI * (1 / 6))
     //loadGLB('../Modelos_glb/untitled.glb', 0, 4, 0, Math.PI * (1 / 6))
     //generateWalls();
+    initSky();
 
     controls = new PointerLockControls(camera, document.body);
 
@@ -288,6 +289,8 @@ function init() {
     scene.add(plane);
     objects.push(plane)
 
+    console.log(plane)
+
     generateHotSpot(0, -48, 20, -Math.PI / 2, '../images/teste.png')
 }
 
@@ -300,13 +303,14 @@ function initSky() {
     sun = new THREE.Vector3();
 
     const effectController = {
-        turbidity: 0.4,
-        rayleigh: 0.75,
-        mieCoefficient: 0.005,
-        mieDirectionalG: 0.85,
+        turbidity: Math.exp(-Math.pow(hour - (hour<12) ? 6 : 18, 6)) * 0.4,
+        rayleigh: Math.exp(-Math.pow(hour - (hour<12) ? 6 : 18, 6)) * 3.8 + 0.2,
+        mieCoefficient: 0.2,
+        mieDirectionalG: 0.999,
         elevation: (hour > 18) ? 315 - hour * 15 : -90 + hour * 15,
         azimuth: 180,
-        hourEC: hour
+        hourEC: hour,
+        exposure: Math.exp(-Math.pow(((hour-12)/5.7),20))* 0.97 + 0.03
     };
 
     console.log(effectController.elevation);
@@ -322,14 +326,23 @@ function initSky() {
         effectController.elevation = (hour > 12) ? 90 + (hour - 12) * 11.25 : -90 + hour * 15,
             uniforms['sunPosition'].value.copy(sun);
 
+        uniforms['turbidity'].value = Math.exp(-Math.pow(hour - (hour<12) ? 6 : 18, 6)) * 0.4;
+        uniforms['rayleigh'].value = Math.exp(-Math.pow(hour - (hour<12) ? 6 : 18, 6)) * 3.8 + 0.2;
+        renderer.toneMappingExposure = Math.exp(-Math.pow(((hour-12)/5.7),20))* 0.97 + 0.03;
+
+        console.log(effectController.turbidity);
+        console.log(effectController.rayleigh);
+
         const phi = THREE.MathUtils.degToRad(90 - effectController.elevation);
         const theta = THREE.MathUtils.degToRad(effectController.azimuth);
 
         ambientLight.intensity = (hour > 12) ? 1.2 - hour * 0.025 : 0.6 + hour * 0.025;
         directionalLight.intensity = (hour > 12) ? 1.2 - hour * 0.025 : 0.6 + hour * 0.025;
         hemisphereLight.intensity = (hour > 12) ? 1.2 - hour * 0.025 : 0.6 + hour * 0.025;
+        
         sun.setFromSphericalCoords(1, phi, theta);
         uniforms['sunPosition'].value.copy(sun);
+
         changeStars();
         changeClouds();
     }
@@ -337,6 +350,7 @@ function initSky() {
     const gui = new GUI();
     gui.add(effectController, 'hourEC', 0, 24, 1).onChange(guiChanged);
     guiChanged();
+    console.log(sky)
 }
 
 //Luzes
@@ -521,7 +535,7 @@ function onWindowResize() {
 
 }
 
-//Mostrar
+//Sempre que utilizador clica em F, verifica se existe um hotspot à frente da camera, mostra o hotspot se houver
 function hotspotTest() {
     console.log("test")
     var raycasterHotspot = new THREE.Raycaster();
@@ -566,6 +580,16 @@ function cameraColision(raycaster, axis) {
         return false;
 
     }
+}
+
+function doCloudTick() {
+    clouds.forEach(function(cloud) {
+        if(cloud.position.x < 3000) {
+            cloud.position.x += 0.2;
+        } else {
+            cloud.position.x = -3000
+        }
+    })
 }
 
 function animate(nebula, app) {
@@ -668,6 +692,11 @@ function animate(nebula, app) {
         }
 
         controls.getObject().position.y += (velocity.y * delta); // new behavior
+    }
+    cloudTicker++;
+    if(cloudTicker==1) {
+        doCloudTick()
+        cloudTicker=0;
     }
 
     prevTime = time;
