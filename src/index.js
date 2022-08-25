@@ -318,7 +318,7 @@ function skyUpdate(){
     const auxTurbValue = Math.exp(-Math.pow(4*(effectController.hour + ((effectController.hour>=18 || (effectController.hour>=6 && manha)) ? 6 : -6) - auxRepeatValue), 2));
 
     const phi = THREE.MathUtils.degToRad(90 - ((nascerSol||porSol) ? 0 : (Math.cos(auxTrigValue)*70))) //elevation
-    const theta = THREE.MathUtils.degToRad(nascerSol ? 0 : (porSol ? 180 : (Math.sin(auxTrigValue)*90)+90)) //azimuth
+    const theta = THREE.MathUtils.degToRad(nascerSol ? 90 : (porSol ? 270 : (Math.sin(auxTrigValue)*90)+180)) //azimuth
     sun.setFromSphericalCoords(1, phi, theta);
     
     uniforms['sunPosition'].value.copy(sun);
