@@ -16,8 +16,6 @@ let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
 let canJump = false;
-let starsInited = false;
-let cloudsInited = false;
 let hemisphereLight;
 let ambientLight;
 let directionalLight;
@@ -36,6 +34,7 @@ const cameraColisionDistance = 0.2;
 const cameraMass = 10;
 let velocityScalar = 40;
 let cloudTicker = 0;
+let autoUpdate = true;
 let prevTime = performance.now();
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
@@ -296,9 +295,9 @@ function init() {
     generateHotSpot(0, -48, 20, -Math.PI / 2, '../images/teste.png')
 }
 
-function getHours(){
+function updateHours(){
     const date = new Date();
-    return date.getHours() + date.getMinutes()/60;
+    hour = date.getHours() + date.getMinutes()/60;
 }
 
 function initRenderer(){
@@ -310,42 +309,49 @@ function initRenderer(){
     document.body.appendChild(renderer.domElement);
 }
 
-function skyUpdate(hour){
+function skyUpdate(){
     const uniforms = sky.material.uniforms;
 
+    const dia = hour>=6 && hour<18;
+    const manha = hour<12;
+    const nascerSol = hour>=5 && hour<6
+    const porSol = hour>=18 && hour<19
+    
     const auxRepeatValue = (Math.round(hour/12))*12;
+    const auxTrigValue = Math.PI*(hour-auxRepeatValue)/(dia ? 12 : 10);
+    const auxTurbValue = Math.exp(-Math.pow(4*(hour + ((hour>=18 || (hour>=6 && manha)) ? 6 : -6) - auxRepeatValue), 2));
 
-    const phi = THREE.MathUtils.degToRad(90 - (Math.cos((Math.PI*(hour-auxRepeatValue))/12)*70)) //elevation
-    const theta = THREE.MathUtils.degToRad((Math.sin((Math.PI*(hour-auxRepeatValue))/12)*90)+90) //azimuth
+    const phi = THREE.MathUtils.degToRad(90 - ((nascerSol||porSol) ? 0 : (Math.cos(auxTrigValue)*70))) //elevation
+    const theta = THREE.MathUtils.degToRad(nascerSol ? 0 : (porSol ? 180 : (Math.sin(auxTrigValue)*90)+90)) //azimuth
     sun.setFromSphericalCoords(1, phi, theta);
-
-    const auxValue = Math.exp(-Math.pow(hour + ((hour>=18 || (hour>=6 && hour<12)) ? 6 : -6) - auxRepeatValue, 6));
     
     uniforms['sunPosition'].value.copy(sun);
-    uniforms['turbidity'].value = (hour>=6 && hour<18) ? auxValue * 2 + 1 : auxValue * 2.9 + 0.1;
-    uniforms['rayleigh'].value = (Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 3.8 + 0.2);
-    uniforms['mieCoefficient'].value = (Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 0.4 + 0.1);
-    uniforms['mieDirectionalG'].value = (-Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 0.499 + 0.999);
-    renderer.toneMappingExposure = (Math.exp(-Math.pow(((hour-12)/5.8),16))* 0.97 + 0.03);
+    uniforms['turbidity'].value = dia ? auxTurbValue * 1 + 2 : auxTurbValue * 2.95 + 0.05;
+    uniforms['rayleigh'].value = (Math.exp(-Math.pow(4*hour - (manha ? 25.3 : 70.7), 6)) * 3.5 + 0.5);
+    uniforms['mieCoefficient'].value = (Math.exp(-Math.pow(1.4*hour - (manha ? 7.6 : 26), 8)) * 0.4 + 0.1);
+    uniforms['mieDirectionalG'].value = (-Math.exp(-Math.pow(1.1*hour - (manha ? 6 : 20.4), 20)) * 0.899 + 0.999);
+    renderer.toneMappingExposure = (Math.exp(-Math.pow(((hour-12)/6.5),24))* 0.96 + 0.04);
     
     ambientLight.intensity = 1;
     directionalLight.intensity = 1;
     hemisphereLight.intensity = 1;
-
-    console.log(sky.material.uniforms)
-    console.log( renderer.toneMappingExposure)
     
     changeStars();
     changeClouds();
 }
 
 function initControllers(){
+    updateHours()
     const gui = new GUI();
     const effectController = {
         hourEC: hour
     };
 
-    gui.add(effectController, 'hourEC', 0, 24, 1).onChange(function(){skyUpdate(effectController.hourEC)});
+    gui.add(effectController, 'hourEC', 0, 24, 0.01).onChange(function(){
+        hour = effectController.hourEC;
+        autoUpdate = false;
+        skyUpdate()
+    });
 }
 
 //Ceu
@@ -354,7 +360,7 @@ function initSky() {
     sky.scale.setScalar(450000);
     scene.add(sky);
     sun = new THREE.Vector3();
-    skyUpdate(getHours())
+    skyUpdate()
 }
 
 //Luzes
@@ -443,7 +449,7 @@ function initClouds() {
 }
 
 function changeClouds() {
-        clouds.forEach(cloud => cloud.material.opacity = (0.7*Math.exp(-Math.pow(hour - 12, 8)/Math.pow(5, 8)) + 0.05));
+        clouds.forEach(cloud => cloud.material.opacity = (0.7*Math.exp(-Math.pow((hour - 12)/5.5, 10)) + 0.05));
 }
 
 function initStars(){
@@ -454,7 +460,7 @@ function initStars(){
 
     let verticesNTyped = []
     let vertice = new THREE.Vector3();
-    for (let i = 0; i < 1000; i ++ ) {
+    for (let i = 0; i < 800; i ++ ) {
         vertice.setFromSpherical(new THREE.Spherical(3000, (Math.random() > 0.5) ? (-(Math.PI/2) * (Math.sqrt(Math.random()) - 1) + Math.PI*3/2) : (-(Math.PI/2) * (-Math.sqrt(Math.random()) - 1) + Math.PI*3/2) , Math.PI * Math.random()))
         verticesNTyped.push(vertice.x);
         verticesNTyped.push(vertice.y);
@@ -470,7 +476,7 @@ function initStars(){
 }
 
 function changeStars() {
-        stars.material.opacity = Math.min(Math.pow((hour-12)/6, 6), 1)
+        stars.material.opacity = Math.min(Math.pow((hour-12)/6.5, 20), 1)
 }
 
 function generateWalls() {
@@ -685,6 +691,11 @@ function animate(nebula, app) {
         cloudTicker=0;
     }
 
+    if(autoUpdate){
+        updateHours()
+        skyUpdate()
+    }
+    
     prevTime = time;
 
     renderer.render(scene, camera);
