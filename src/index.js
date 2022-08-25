@@ -18,7 +18,6 @@ let moveRight = false;
 let canJump = false;
 let starsInited = false;
 let cloudsInited = false;
-let primeiroCarregamento = false;
 let hemisphereLight;
 let ambientLight;
 let directionalLight;
@@ -58,8 +57,7 @@ function init() {
     camera.position.z = 0;
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x001844);
-
+    initRenderer()
     initLights();
     loadGLB('../Modelos_glb/modelos.glb', 0, 0, 0, 0);
     //loadGLB('../Modelos_glb/Moinho.glb', 0, -45, 0);
@@ -71,6 +69,7 @@ function init() {
     //loadGLB('../Modelos_glb/untitled.glb', 0, 4, 0, Math.PI * (1 / 6))
     //generateWalls();
     initSky();
+    initControllers()
 
     controls = new PointerLockControls(camera, document.body);
 
@@ -294,66 +293,65 @@ function init() {
     generateHotSpot(0, -48, 20, -Math.PI / 2, '../images/teste.png')
 }
 
+function getHours(){
+    const date = new Date();
+    return date.getHours() + date.getMinutes()/60;
+}
+
+function initRenderer(){
+    renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    document.body.appendChild(renderer.domElement);
+}
+
+function skyUpdate(hour){
+    const uniforms = sky.material.uniforms;
+
+    const auxRepeatValue = (Math.round(hour/12))*12;
+
+    const phi = THREE.MathUtils.degToRad(90 - (Math.cos((Math.PI*(hour-auxRepeatValue))/12)*70)) //elevation
+    const theta = THREE.MathUtils.degToRad((Math.sin((Math.PI*(hour-auxRepeatValue))/12)*90)+90) //azimuth
+    sun.setFromSphericalCoords(1, phi, theta);
+
+    const auxValue = Math.exp(-Math.pow(hour + ((hour>=18 || (hour>=6 && hour<12)) ? 6 : -6) - auxRepeatValue, 6));
+    
+    uniforms['sunPosition'].value.copy(sun);
+    uniforms['turbidity'].value = (hour>=6 && hour<18) ? auxValue * 2 + 1 : auxValue * 2.9 + 0.1;
+    uniforms['rayleigh'].value = (Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 3.8 + 0.2);
+    uniforms['mieCoefficient'].value = (Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 0.4 + 0.1);
+    uniforms['mieDirectionalG'].value = (-Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 0.499 + 0.999);
+    renderer.toneMappingExposure = (Math.exp(-Math.pow(((hour-12)/5.8),16))* 0.97 + 0.03);
+    
+    ambientLight.intensity = 1;
+    directionalLight.intensity = 1;
+    hemisphereLight.intensity = 1;
+
+    console.log(sky.material.uniforms)
+    console.log( renderer.toneMappingExposure)
+    
+    changeStars();
+    changeClouds();
+}
+
+function initControllers(){
+    const gui = new GUI();
+    const effectController = {
+        hourEC: hour
+    };
+
+    gui.add(effectController, 'hourEC', 0, 24, 1).onChange(function(){skyUpdate(effectController.hourEC)});
+}
+
 //Ceu
 function initSky() {
     sky = new Sky();
     sky.scale.setScalar(450000);
     scene.add(sky);
-
     sun = new THREE.Vector3();
-
-    const effectController = {
-        turbidity: Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 0.4,
-        rayleigh: Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 3.8 + 0.2,
-        mieCoefficient: 0.2,
-        mieDirectionalG: 0.999,
-        elevation: -((Math.abs(Math.pow(hour-((Math.round(hour/12))*12), 3)))/2.7)+80,
-        azimuth: (Math.sin((Math.PI*(hour-((Math.round(hour/12))*12)))/12)*90)+90,
-        hourEC: hour,
-        exposure: Math.exp(-Math.pow(((hour-12)/5.7),20))* 0.97 + 0.03
-    };
-
-    console.log(effectController.elevation);
-
-    const uniforms = sky.material.uniforms;
-    uniforms['turbidity'].value = effectController.turbidity;
-    uniforms['rayleigh'].value = effectController.rayleigh;
-    uniforms['mieCoefficient'].value = effectController.mieCoefficient;
-    uniforms['mieDirectionalG'].value = effectController.mieDirectionalG;
-
-    function guiChanged() {
-        hour = effectController.hourEC;
-        effectController.elevation = -((Math.abs(Math.pow(hour-((Math.round(hour/12))*12), 3)))/2.7)+80;
-        effectController.azimuth = (Math.sin((Math.PI*(hour-((Math.round(hour/12))*12)))/12)*90)+90;
-        uniforms['sunPosition'].value.copy(sun);
-
-        effectController.turbidity = Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 0.4;
-        uniforms['turbidity'].value = effectController.turbidity;
-        
-        effectController.rayleigh = Math.exp(-Math.pow(hour - ((hour<12) ? 6 : 18), 6)) * 3.8 + 0.2;
-        uniforms['rayleigh'].value = effectController.rayleigh;
-        
-        effectController.exposure = Math.exp(-Math.pow(((hour-12)/5.7),20))* 0.97 + 0.03;
-        renderer.toneMappingExposure = effectController.exposure;
-
-        const phi = THREE.MathUtils.degToRad(90 - effectController.elevation);
-        const theta = THREE.MathUtils.degToRad(effectController.azimuth);
-
-        ambientLight.intensity = (hour > 12) ? 1.2 - hour * 0.025 : 0.6 + hour * 0.025;
-        directionalLight.intensity = (hour > 12) ? 1.2 - hour * 0.025 : 0.6 + hour * 0.025;
-        hemisphereLight.intensity = (hour > 12) ? 1.2 - hour * 0.025 : 0.6 + hour * 0.025;
-        
-        sun.setFromSphericalCoords(1, phi, theta);
-        uniforms['sunPosition'].value.copy(sun);
-
-        changeStars();
-        changeClouds();
-    }
-
-    const gui = new GUI();
-    gui.add(effectController, 'hourEC', 0, 24, 1).onChange(guiChanged);
-    guiChanged();
-    console.log(sky)
+    skyUpdate(getHours())
 }
 
 //Luzes
@@ -401,14 +399,6 @@ function loadGLB(modelo, x, y, z, rotation) {
             })
         }
     )
-    if (!primeiroCarregamento) {
-        renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        document.body.appendChild(renderer.domElement);
-        primeiroCarregamento = true;
-    }
 
     console.log("Modelo carregado...")
 }
