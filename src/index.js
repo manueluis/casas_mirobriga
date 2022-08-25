@@ -21,12 +21,10 @@ let ambientLight;
 let directionalLight;
 
 let intersetado;
-
+let effectController;
 let cloudMaterial, clouds = [];
 let objectsHotspot = [];
 
-const d = new Date();
-let hour = d.getHours();
 let sky, sun;
 
 const cameraFloorDistance = 1.3;
@@ -34,7 +32,6 @@ const cameraColisionDistance = 0.2;
 const cameraMass = 10;
 let velocityScalar = 40;
 let cloudTicker = 0;
-let autoUpdate = true;
 let prevTime = performance.now();
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
@@ -50,13 +47,14 @@ Nebula.fromJSONAsync(json, THREE).then(loaded => {
 });
 
 function init() {
-    camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.01, 6000 + hour * 5);
+    camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.01, 6000);
     camera.position.y = cameraFloorDistance + 10;
     camera.position.x = 0;
     camera.position.z = 0;
 
     scene = new THREE.Scene();
     initRenderer()
+    initControllers()
     initLights();
     initStars();
     initClouds();
@@ -70,8 +68,6 @@ function init() {
     //loadGLB('../Modelos_glb/Telhas.glb', 30.35, 4.58, -11.1, Math.PI * (1 / 6))
     //loadGLB('../Modelos_glb/untitled.glb', 0, 4, 0, Math.PI * (1 / 6))
     //generateWalls();
-    initSky();
-    initControllers()
 
     controls = new PointerLockControls(camera, document.body);
 
@@ -297,7 +293,7 @@ function init() {
 
 function updateHours(){
     const date = new Date();
-    hour = date.getHours() + date.getMinutes()/60;
+    effectController.hour = date.getHours() + date.getMinutes()/60;
 }
 
 function initRenderer(){
@@ -312,14 +308,14 @@ function initRenderer(){
 function skyUpdate(){
     const uniforms = sky.material.uniforms;
 
-    const dia = hour>=6 && hour<18;
-    const manha = hour<12;
-    const nascerSol = hour>=5 && hour<6
-    const porSol = hour>=18 && hour<19
+    const dia = effectController.hour>=6 && effectController.hour<18;
+    const manha = effectController.hour<12;
+    const nascerSol = effectController.hour>=5 && effectController.hour<6
+    const porSol = effectController.hour>=18 && effectController.hour<19
     
-    const auxRepeatValue = (Math.round(hour/12))*12;
-    const auxTrigValue = Math.PI*(hour-auxRepeatValue)/(dia ? 12 : 10);
-    const auxTurbValue = Math.exp(-Math.pow(4*(hour + ((hour>=18 || (hour>=6 && manha)) ? 6 : -6) - auxRepeatValue), 2));
+    const auxRepeatValue = (Math.round(effectController.hour/12))*12;
+    const auxTrigValue = Math.PI*(effectController.hour-auxRepeatValue)/(dia ? 12 : 10);
+    const auxTurbValue = Math.exp(-Math.pow(4*(effectController.hour + ((effectController.hour>=18 || (effectController.hour>=6 && manha)) ? 6 : -6) - auxRepeatValue), 2));
 
     const phi = THREE.MathUtils.degToRad(90 - ((nascerSol||porSol) ? 0 : (Math.cos(auxTrigValue)*70))) //elevation
     const theta = THREE.MathUtils.degToRad(nascerSol ? 0 : (porSol ? 180 : (Math.sin(auxTrigValue)*90)+90)) //azimuth
@@ -327,10 +323,10 @@ function skyUpdate(){
     
     uniforms['sunPosition'].value.copy(sun);
     uniforms['turbidity'].value = dia ? auxTurbValue * 1 + 2 : auxTurbValue * 2.95 + 0.05;
-    uniforms['rayleigh'].value = (Math.exp(-Math.pow(4*hour - (manha ? 25.3 : 70.7), 6)) * 3.5 + 0.5);
-    uniforms['mieCoefficient'].value = (Math.exp(-Math.pow(1.4*hour - (manha ? 7.6 : 26), 8)) * 0.4 + 0.1);
-    uniforms['mieDirectionalG'].value = (-Math.exp(-Math.pow(1.1*hour - (manha ? 6 : 20.4), 20)) * 0.899 + 0.999);
-    renderer.toneMappingExposure = (Math.exp(-Math.pow(((hour-12)/6.5),24))* 0.96 + 0.04);
+    uniforms['rayleigh'].value = (Math.exp(-Math.pow(4*effectController.hour - (manha ? 25.3 : 70.7), 6)) * 3.5 + 0.5);
+    uniforms['mieCoefficient'].value = (Math.exp(-Math.pow(1.4*effectController.hour - (manha ? 7.6 : 26), 8)) * 0.4 + 0.1);
+    uniforms['mieDirectionalG'].value = (-Math.exp(-Math.pow(1.1*effectController.hour - (manha ? 6 : 20.4), 20)) * 0.899 + 0.999);
+    renderer.toneMappingExposure = (Math.exp(-Math.pow(((effectController.hour-12)/6.5),24))* 0.96 + 0.04);
     
     ambientLight.intensity = 1;
     directionalLight.intensity = 1;
@@ -341,17 +337,26 @@ function skyUpdate(){
 }
 
 function initControllers(){
-    updateHours()
     const gui = new GUI();
-    const effectController = {
-        hourEC: hour
+    effectController = {
+        hour: 0,
+        autoUpdate: true
     };
 
-    gui.add(effectController, 'hourEC', 0, 24, 0.01).onChange(function(){
-        hour = effectController.hourEC;
-        autoUpdate = false;
+    updateHours()
+
+    let ambienteFolder = gui.addFolder('Ambiente')
+
+    ambienteFolder.add(effectController, 'hour', 0, 24, 0.01).name("Hora do dia").listen().onChange(function(){
+        effectController.autoUpdate = false;
         skyUpdate()
     });
+
+    ambienteFolder.add(effectController, 'autoUpdate').name("Hora automática").listen().onChange(function(){
+        if(effectController.autoUpdate){
+            updateHours();
+        }
+    })
 }
 
 //Ceu
@@ -426,7 +431,7 @@ function initClouds() {
                 map: texture,
                 transparent: true,
                 depthWrite: false,
-                opacity: (hour < 12) ? hour / 12 : 24 / hour
+                opacity: (effectController.hour < 12) ? effectController.hour / 12 : 24 / effectController.hour
             });
 
             for (let p = 0, l = 50; p < l; p++) {
@@ -449,7 +454,7 @@ function initClouds() {
 }
 
 function changeClouds() {
-        clouds.forEach(cloud => cloud.material.opacity = (0.7*Math.exp(-Math.pow((hour - 12)/5.5, 10)) + 0.05));
+        clouds.forEach(cloud => cloud.material.opacity = (0.7*Math.exp(-Math.pow((effectController.hour - 12)/5.5, 10)) + 0.05));
 }
 
 function initStars(){
@@ -476,7 +481,7 @@ function initStars(){
 }
 
 function changeStars() {
-        stars.material.opacity = Math.min(Math.pow((hour-12)/6.5, 20), 1)
+        stars.material.opacity = Math.min(Math.pow((effectController.hour-12)/6.5, 20), 1)
 }
 
 function generateWalls() {
@@ -691,7 +696,7 @@ function animate(nebula, app) {
         cloudTicker=0;
     }
 
-    if(autoUpdate){
+    if(effectController.autoUpdate){
         updateHours()
         skyUpdate()
     }
