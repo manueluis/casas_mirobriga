@@ -7,7 +7,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { Vector2 } from 'three';
 
-let camera, scene, renderer, controls, fireLight, particles;
+let camera, scene, renderer, controls, fireLight, skyGeo, stars;
 
 const objects = [];
 
@@ -59,6 +59,9 @@ function init() {
     scene = new THREE.Scene();
     initRenderer()
     initLights();
+    initStars();
+    initClouds();
+    initSky();
     loadGLB('../Modelos_glb/modelos.glb', 0, 0, 0, 0);
     //loadGLB('../Modelos_glb/Moinho.glb', 0, -45, 0);
     loadGLB('../Modelos_glb/Tabernae.glb', 34.64, 2.55, -13.8, Math.PI * (1 / 6));
@@ -403,81 +406,71 @@ function loadGLB(modelo, x, y, z, rotation) {
     console.log("Modelo carregado...")
 }
 
-function changeClouds() {
-    if ((hour <= 21 && hour >= 3) && !cloudsInited) {
-        cloudsInited = true;
-        const loader = new THREE.TextureLoader();
+function initClouds() {
+    const loader = new THREE.TextureLoader();
 
-        loader.crossOrigin = '';
+    loader.crossOrigin = '';
 
-        loader.load(
-            '../images/cloud.png',
-            function onLoad(texture) {
-                const cloudGeo = new THREE.CircleBufferGeometry((Math.random() * 600) + 450, (Math.random() * 600) + 450);
+    loader.load(
+        '../images/cloud.png',
+        function onLoad(texture) {
+            const cloudGeometry = new THREE.CircleBufferGeometry((Math.random() * 600) + 450, (Math.random() * 600) + 450);// pk é que tem o random????
 
-                cloudMaterial = new THREE.MeshBasicMaterial({
-                    map: texture,
-                    transparent: true,
-                    depthWrite: false,
-                    opacity: (hour < 12) ? hour / 12 : 24 / hour
-                });
+            cloudMaterial = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                depthWrite: false,
+                opacity: (hour < 12) ? hour / 12 : 24 / hour
+            });
 
-                for (let p = 0, l = 50; p < l; p++) {
-                    let cloud = new THREE.Mesh(cloudGeo, cloudMaterial);
+            for (let p = 0, l = 50; p < l; p++) {
+                let cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
 
-                    cloud.rotateX(Math.PI / 2);
+                cloud.rotateX(Math.PI / 2);
 
-                    cloud.position.set(
-                        (Math.random() * 6000) - 3000,
-                        400 + Math.random() * 200,
-                        (Math.random() * 6000) - 3000
-                    );
+                cloud.position.set(
+                    (Math.random() * 6000) - 3000,
+                    400 + Math.random() * 200,
+                    (Math.random() * 6000) - 3000
+                );
 
-                    cloud.rotation.z = Math.random() * 360;
-                    scene.add(cloud);
-                    clouds.push(cloud);
-                }
+                cloud.rotation.z = Math.random() * 360;
+                scene.add(cloud);
+                clouds.push(cloud);
             }
-        );
-    } else if (hour > 21 || hour < 3) {
-        clouds.forEach(cloud => scene.remove(cloud));
-        clouds = [];
-        cloudsInited = false;
-    } else {
-        clouds.forEach(cloud => cloud.material.opacity = (-Math.pow(hour - 13, 2) / 49 + 1));
+        }
+    );
+}
+
+function changeClouds() {
+        clouds.forEach(cloud => cloud.material.opacity = (0.7*Math.exp(-Math.pow(hour - 12, 8)/Math.pow(5, 8)) + 0.05));
+}
+
+function initStars(){
+    let geometry = new THREE.BufferGeometry();
+
+    let material = new THREE.PointsMaterial( { size: 2, sizeAttenuation: false, transparent: true } );
+    material.color.set( new THREE.Color(255, 205, 60))
+
+    let verticesNTyped = []
+    let vertice = new THREE.Vector3();
+    for (let i = 0; i < 1000; i ++ ) {
+        vertice.setFromSpherical(new THREE.Spherical(3000, (Math.random() > 0.5) ? (-(Math.PI/2) * (Math.sqrt(Math.random()) - 1) + Math.PI*3/2) : (-(Math.PI/2) * (-Math.sqrt(Math.random()) - 1) + Math.PI*3/2) , Math.PI * Math.random()))
+        verticesNTyped.push(vertice.x);
+        verticesNTyped.push(vertice.y);
+        verticesNTyped.push(vertice.z);
+        
     }
+    let vertices = new Float32Array(verticesNTyped)
+
+    geometry.setAttribute( 'position', new THREE.BufferAttribute(vertices, 3))
+
+    stars = new THREE.Points( geometry, material );
+    scene.add( stars );
 }
 
 function changeStars() {
-    if ((hour > 19 || hour < 8) && !starsInited) {
-        starsInited = true;
-
-        let geometry = new THREE.BufferGeometry();
-
-        let material = new THREE.PointsMaterial({ size: 2, sizeAttenuation: false, transparent: true });
-        material.color.setHex();
-        material.color.set(new THREE.Color(255, 205, 60))
-
-        let verticesNTyped = []
-        let vertice = new THREE.Vector3();
-        for (let i = 0; i < 1000; i++) {
-            vertice.setFromSpherical(new THREE.Spherical(3000 + 5 * Math.random(), 2 * Math.PI * Math.random(), Math.PI * Math.random()))
-            verticesNTyped.push(vertice.x);
-            verticesNTyped.push(vertice.y);
-            verticesNTyped.push(vertice.z);
-
-        }
-        let vertices = new Float32Array(verticesNTyped)
-
-        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
-
-        particles = new THREE.Points(geometry, material);
-        scene.add(particles);
-    } else if (hour >= 8 && hour <= 19) {
-        scene.remove(particles)
-        particles = null;
-        starsInited = false;
-    }
+        stars.material.opacity = Math.min(Math.pow((hour-12)/6, 6), 1)
 }
 
 function generateWalls() {
