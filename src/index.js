@@ -6,6 +6,8 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 import { Vector2 } from 'three';
+import { Vector3 } from 'three';
+import { TextureLoader } from 'three';
 
 let camera, scene, renderer, controls, fireLight, skyGeo, stars;
 
@@ -24,6 +26,9 @@ let intersetado;
 let effectController;
 let cloudMaterial, clouds = [];
 let objectsHotspot = [];
+let walls = [];
+
+let hotSpotMap = new Map();
 
 let sky, sun;
 
@@ -36,6 +41,7 @@ let prevTime = performance.now();
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
 
+initControllers()
 init();
 
 Nebula.fromJSONAsync(json, THREE).then(loaded => {
@@ -47,27 +53,24 @@ Nebula.fromJSONAsync(json, THREE).then(loaded => {
 });
 
 function init() {
-    camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.01, 6000);
-    camera.position.y = cameraFloorDistance + 10;
+    camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.01, 6000 + effectController.hour * 5);
+    camera.position.y = cameraFloorDistance + 50;
     camera.position.x = 0;
     camera.position.z = 0;
 
     scene = new THREE.Scene();
     initRenderer()
-    initControllers()
     initLights();
     initStars();
     initClouds();
     initSky();
-    loadGLB('../Modelos_glb/modelos.glb', 0, 0, 0, 0);
-    //loadGLB('../Modelos_glb/Moinho.glb', 0, -45, 0);
-    loadGLB('../Modelos_glb/Tabernae.glb', 34.64, 2.55, -13.8, Math.PI * (1 / 6));
-    loadGLB('../Modelos_glb/Bancada.glb', 30.3652, 2.7, -14.3674, Math.PI * (1 / 6));
-    loadGLB('../Modelos_glb/Escada.glb', 27.588, 2.7418, -18.129, Math.PI * (1 / 6));
-    loadGLB('../Modelos_glb/Escada.glb', 34.449, 2.7418, -22.103, Math.PI * (1 / 6));
-    //loadGLB('../Modelos_glb/Telhas.glb', 30.35, 4.58, -11.1, Math.PI * (1 / 6))
-    //loadGLB('../Modelos_glb/untitled.glb', 0, 4, 0, Math.PI * (1 / 6))
-    //generateWalls();
+    loadTabernae();
+    loadGLB('../Modelos_glb/terreno.glb', 0, -42.747, 0, 0);
+    loadGLB('../Modelos_glb/A.glb', -189.96, 5.0232, -47.563, -184);
+    loadGLB('../Modelos_glb/B.glb', -194.04, 5.7165, -73.686, 70.9);
+    loadGLBQuaternion('../Modelos_glb/Termas.glb', 5.0909, -4.9488, 44.97, new THREE.Quaternion(0.338, -0.621, 0.621, 0.338));
+    generateWalls();
+    initSky();
 
     controls = new PointerLockControls(camera, document.body);
 
@@ -91,7 +94,7 @@ function init() {
         instructions.style.display = '';
 
     });
-    
+
 
     scene.add(controls.getObject());
 
@@ -167,7 +170,7 @@ function init() {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
-    var points = [
+    /*var points = [
     
         new THREE.Vector3(0, 1, 0),
         new THREE.Vector3(0, 0, 0),
@@ -286,9 +289,9 @@ function init() {
     scene.add(plane);
     objects.push(plane)
 
-    console.log(plane)
+    console.log(plane)*/
 
-    generateHotSpot(0, -48, 20, -Math.PI / 2, '../images/teste.png')
+    generateHotSpot(0, -1, 20, 90, 'Teste')
 }
 
 function updateHours(){
@@ -296,7 +299,7 @@ function updateHours(){
     effectController.hour = date.getHours() + date.getMinutes()/60;
 }
 
-function initRenderer(){
+function initRenderer() {
     renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -331,7 +334,7 @@ function updateSky(){
     ambientLight.intensity = 1;
     directionalLight.intensity = 1;
     hemisphereLight.intensity = 1;
-    
+
     changeStars();
     changeClouds();
 }
@@ -397,7 +400,593 @@ function initLights() {
     scene.add(fireLight);
 }
 
-function loadGLB(modelo, x, y, z, rotation) {
+function loadTabernae() {
+    let posx = 61.272; let posy = 2.8953; let posz = -24.455; let rot = 31;
+
+    loadGLBwMap('../Modelos_glb/Tabernae.glb', posx, posy, posz, rot,"../images/colorMapTabernae.1001.png");
+    loadGLBwMap('../Modelos_glb/Escada.glb', posx - 7.2992, posy + 0.22, posz - 4.4689, rot, "../images/colorMapBiombo.1001.png");
+    loadGLBwMap('../Modelos_glb/Escada.glb', posx - 0.51904, posy + 0.22, posz - 8.5429, rot, "../images/colorMapBiombo.1001.png");
+    loadBancada(posx-4.784, posy+0.1987, posz-1.265, rot);
+    loadBiombo(posx-5.2333, posy, posz-2.7702, rot+90);
+    loadGLB('../Modelos_glb/Dolium.glb', posx-5.3469, posy+0.1987, posz-3.0012, rot);
+    loadGLB('../Modelos_glb/Dolium.glb', posx-4.9777, posy+0.1987, posz-3.2212, rot);
+    loadGLB('../Modelos_glb/Dolium.glb', posx-4.6088, posy+0.1987, posz-3.4502, rot);
+    loadGLB('../Modelos_glb/Portas.glb', posx-1.6803, posy+0.99639, posz+1.3712, rot);
+    loadGLB('../Modelos_glb/Portas.glb', posx+2.3694, posy+0.99639, posz-1.0621, rot);
+    loadTelhas();
+    loadRipaseBarrotes();
+}
+
+function loadBancada(posx, posy, posz, rotation) {
+    var rot = rotation * (Math.PI / 180);
+
+    var points = [
+        //Topo
+        new THREE.Vector3(1.025, 1.0013, -0.525),
+        new THREE.Vector3(-1.025, 1.0013, -0.525),
+        new THREE.Vector3(1.025, 1.0013, 0.525),
+        new THREE.Vector3(-1.025, 1.0013, 0.525),
+        
+        new THREE.Vector3(1.025, 0.94875, 0.525),
+        new THREE.Vector3(-1.025, 0.94875, 0.525),
+        new THREE.Vector3(1.025, 0.94875, -0.525),
+        new THREE.Vector3(-1.025, 0.94875, -0.525),
+        
+        new THREE.Vector3(1.025, 1.0013, 0.525),
+        new THREE.Vector3(-1.025, 1.0013, 0.525),
+        new THREE.Vector3(1.025, 0.94875, 0.525),
+        new THREE.Vector3(-1.025, 0.94875, 0.525),
+        
+        new THREE.Vector3(-1.025, 1.0013, -0.525),
+        new THREE.Vector3(1.025, 1.0013, -0.525),
+        new THREE.Vector3(-1.025, 0.94875, -0.525),
+        new THREE.Vector3(1.025, 0.94875, -0.525),
+        
+        new THREE.Vector3(-1.025, 1.0013, 0.525),
+        new THREE.Vector3(-1.025, 1.0013, -0.525),
+        new THREE.Vector3(-1.025, 0.94875, 0.525),
+        new THREE.Vector3(-1.025, 0.94875, -0.525),
+
+        new THREE.Vector3(1.025, 1.0013, -0.525),
+        new THREE.Vector3(1.025, 1.0013, 0.525),
+        new THREE.Vector3(1.025, 0.94875, -0.525),
+        new THREE.Vector3(1.025, 0.94875, 0.525),
+
+        //Base
+        new THREE.Vector3(0.975, 0, -0.475),
+        new THREE.Vector3(0.975, 0, 0.475),
+        new THREE.Vector3(-0.975, 0, -0.475),
+        new THREE.Vector3(-0.975, 0, 0.475),
+
+        new THREE.Vector3(-0.975, 0.95, 0.475),
+        new THREE.Vector3(-0.975, 0.95, -0.475),
+        new THREE.Vector3(0.975, 0.95, 0.475),
+        new THREE.Vector3(0.975, 0.95, -0.475),
+
+        new THREE.Vector3(0.975, 0.95, 0.475),
+        new THREE.Vector3(-0.975, 0.95, 0.475),
+        new THREE.Vector3(0.975, 0, 0.475),
+        new THREE.Vector3(-0.975, 0, 0.475),
+
+        new THREE.Vector3(-0.975, 0.95, -0.475),
+        new THREE.Vector3(0.975, 0.95, -0.475),
+        new THREE.Vector3(-0.975, 0, -0.475),
+        new THREE.Vector3(0.975, 0, -0.475),
+
+        new THREE.Vector3(0.975, 0.95, -0.475),
+        new THREE.Vector3(0.975, 0.95, 0.475),
+        new THREE.Vector3(0.975, 0, -0.475),
+        new THREE.Vector3(0.975, 0, 0.475),
+
+        new THREE.Vector3(-0.975, 0.95, 0.475),
+        new THREE.Vector3(-0.975, 0.95, -0.475),
+        new THREE.Vector3(-0.975, 0, 0.475),
+        new THREE.Vector3(-0.975, 0, -0.475),
+    ];
+
+    var geometry = new THREE.BufferGeometry().setFromPoints(points);
+        
+    var indices = [];
+
+    //Topo
+    indices.push(0, 1, 3);
+    indices.push(3, 2, 0);
+    indices.push(4, 5, 7);
+    indices.push(7, 6, 4);
+    indices.push(8, 9, 11);
+    indices.push(11, 10, 8);
+    indices.push(12, 13, 15);
+    indices.push(15, 14, 12);
+    indices.push(16, 17, 19);
+    indices.push(19, 18, 16);
+    indices.push(20, 21, 23);
+    indices.push(23, 22, 20);
+    //Base
+    indices.push(24, 25, 27);
+    indices.push(27, 26, 24);
+    indices.push(28, 29, 31);
+    indices.push(31, 30, 28);
+    indices.push(32, 33, 35);
+    indices.push(35, 34, 32);
+    indices.push(36, 37, 39);
+    indices.push(39, 38, 36);
+    indices.push(40, 41, 43);
+    indices.push(43, 42, 40);
+    indices.push(44, 45, 47);
+    indices.push(47, 46, 44);
+     
+    geometry.setIndex( indices );
+    
+    //Topo
+    geometry.addGroup(0, 6, 0);
+    geometry.addGroup(6, 6, 0);
+    geometry.addGroup(12, 6, 0);
+    geometry.addGroup(18, 6, 0);
+    geometry.addGroup(24, 6, 0);
+    geometry.addGroup(30, 6, 0);
+
+    //Base
+    geometry.addGroup(36, 6, 1);
+    geometry.addGroup(42, 6, 1);
+    geometry.addGroup(48, 6, 1);
+    geometry.addGroup(54, 6, 1);
+    geometry.addGroup(60, 6, 1);
+    geometry.addGroup(66, 6, 1);
+    
+    var quad_uvs =
+    [
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0
+    ];
+    let uvs = new Float32Array(quad_uvs);
+    geometry.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
+    
+    geometry.computeVertexNormals();
+    
+    let mat1 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/colorMapBancada.1001.png")});
+    mat1.normalMap = new THREE.TextureLoader().load("../images/normalMapBancada.1001.png");
+
+    let mat2 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/colorMapBancada.1012.png")});
+    mat2.normalMap = new THREE.TextureLoader().load("../images/normalMapBancada.1012.png");
+
+    var materials = [
+        mat1,
+        mat2
+    ];
+        
+    var plane = new THREE.Mesh(geometry, materials);
+    plane.rotation.set(0, rot, 0);
+    plane.position.set(posx, posy, posz)
+    scene.add(plane);
+    objects.push(plane);
+}
+
+function loadBiombo(posx, posy, posz, rotation) {
+    let centerY = 0.8;
+    let rot = rotation * (Math.PI / 180);
+
+    var points = [
+        //Parede
+        new THREE.Vector3(-0.015, centerY+0.8, 1.35),
+        new THREE.Vector3(-0.015, centerY+0.8, -1.35),
+        new THREE.Vector3(-0.015, centerY-0.8, 1.35),
+        new THREE.Vector3(-0.015, centerY-0.8, -1.35),
+        
+        new THREE.Vector3(0.015, centerY+0.8, 1.35),
+        new THREE.Vector3(0.015, centerY+0.8, -1.35),
+        new THREE.Vector3(-0.015, centerY+0.8, 1.35),
+        new THREE.Vector3(-0.015, centerY+0.8, -1.35),
+        
+        new THREE.Vector3(-0.015, centerY-0.8, 1.35),
+        new THREE.Vector3(-0.015, centerY-0.8, -1.35),
+        new THREE.Vector3(0.015, centerY-0.8, 1.35),
+        new THREE.Vector3(0.015, centerY-0.8, -1.35),
+        
+        new THREE.Vector3(0.015, centerY+0.8, -1.35),
+        new THREE.Vector3(0.015, centerY+0.8, 1.35),
+        new THREE.Vector3(0.015, centerY-0.8, -1.35),
+        new THREE.Vector3(0.015, centerY-0.8, 1.35),
+        
+        new THREE.Vector3(0.015, centerY+0.8, 1.35),
+        new THREE.Vector3(-0.015, centerY+0.8, 1.35),
+        new THREE.Vector3(0.015, centerY-0.8, 1.35),
+        new THREE.Vector3(-0.015, centerY-0.8, 1.35),
+
+        new THREE.Vector3(-0.015, centerY+0.8, -1.35),
+        new THREE.Vector3(0.015, centerY+0.8, -1.35),
+        new THREE.Vector3(-0.015, centerY-0.8, -1.35),
+        new THREE.Vector3(0.015, centerY-0.8, -1.35),
+
+        //Apoio 1
+        new THREE.Vector3(-0.015, centerY+0.8, 1.385),
+        new THREE.Vector3(-0.085, centerY+0.8, 1.385),
+        new THREE.Vector3(-0.015, centerY-0.8, 1.385),
+        new THREE.Vector3(-0.085, centerY-0.8, 1.385),
+
+        new THREE.Vector3(-0.015, centerY+0.8, 1.315),
+        new THREE.Vector3(-0.085, centerY+0.8, 1.315),
+        new THREE.Vector3(-0.015, centerY+0.8, 1.385),
+        new THREE.Vector3(-0.085, centerY+0.8, 1.385),
+
+        new THREE.Vector3(-0.085, centerY+0.8, 1.315),
+        new THREE.Vector3(-0.015, centerY+0.8, 1.315),
+        new THREE.Vector3(-0.085, centerY-0.8, 1.315),
+        new THREE.Vector3(-0.015, centerY-0.8, 1.315),
+
+        new THREE.Vector3(-0.085, centerY-0.8, 1.315),
+        new THREE.Vector3(-0.015, centerY-0.8, 1.315),
+        new THREE.Vector3(-0.085, centerY-0.8, 1.385),
+        new THREE.Vector3(-0.015, centerY-0.8, 1.385),
+
+        new THREE.Vector3(-0.085, centerY+0.8, 1.385),
+        new THREE.Vector3(-0.085, centerY+0.8, 1.315),
+        new THREE.Vector3(-0.085, centerY-0.8, 1.385),
+        new THREE.Vector3(-0.085, centerY-0.8, 1.315),
+
+        new THREE.Vector3(-0.015, centerY+0.8, 1.315),
+        new THREE.Vector3(-0.015, centerY+0.8, 1.385),
+        new THREE.Vector3(-0.015, centerY-0.8, 1.315),
+        new THREE.Vector3(-0.015, centerY-0.8, 1.385),
+
+        //Apoio 2
+        new THREE.Vector3(-0.085, centerY+0.8, -1.385),
+        new THREE.Vector3(-0.015, centerY+0.8, -1.385),
+        new THREE.Vector3(-0.085, centerY-0.8, -1.385),
+        new THREE.Vector3(-0.015, centerY-0.8, -1.385),
+
+        new THREE.Vector3(-0.085, centerY+0.8, -1.315),
+        new THREE.Vector3(-0.015, centerY+0.8, -1.315),
+        new THREE.Vector3(-0.085, centerY+0.8, -1.385),
+        new THREE.Vector3(-0.015, centerY+0.8, -1.385),
+
+        new THREE.Vector3(-0.015, centerY+0.8, -1.315),
+        new THREE.Vector3(-0.085, centerY+0.8, -1.315),
+        new THREE.Vector3(-0.015, centerY-0.8, -1.315),
+        new THREE.Vector3(-0.085, centerY-0.8, -1.315),
+
+        new THREE.Vector3(-0.015, centerY-0.8, -1.315),
+        new THREE.Vector3(-0.085, centerY-0.8, -1.315),
+        new THREE.Vector3(-0.015, centerY-0.8, -1.385),
+        new THREE.Vector3(-0.085, centerY-0.8, -1.385),
+
+        new THREE.Vector3(-0.085, centerY+0.8, -1.315),
+        new THREE.Vector3(-0.085, centerY+0.8, -1.385),
+        new THREE.Vector3(-0.085, centerY-0.8, -1.315),
+        new THREE.Vector3(-0.085, centerY-0.8, -1.385),
+
+        new THREE.Vector3(-0.015, centerY+0.8, -1.385),
+        new THREE.Vector3(-0.015, centerY+0.8, -1.315),
+        new THREE.Vector3(-0.015, centerY-0.8, -1.385),
+        new THREE.Vector3(-0.015, centerY-0.8, -1.315),
+    ];
+        
+    var geometry = new THREE.BufferGeometry().setFromPoints(points);
+        
+    var indices = [];
+    
+    //Parede
+    indices.push(0, 1, 3);
+    indices.push(3, 2, 0);
+    indices.push(4, 5, 7);
+    indices.push(7, 6, 4);
+    indices.push(8, 9, 11);
+    indices.push(11, 10, 8);
+    indices.push(12, 13, 15);
+    indices.push(15, 14, 12);
+    indices.push(16, 17, 19);
+    indices.push(19, 18, 16);
+    indices.push(20, 21, 23);
+    indices.push(23, 22, 20);
+    //Apoio 1
+    indices.push(24, 25, 27);
+    indices.push(27, 26, 24);
+    indices.push(28, 29, 31);
+    indices.push(31, 30, 28);
+    indices.push(32, 33, 35);
+    indices.push(35, 34, 32);
+    indices.push(36, 37, 39);
+    indices.push(39, 38, 36);
+    indices.push(40, 41, 43);
+    indices.push(43, 42, 40);
+    indices.push(44, 45, 47);
+    indices.push(47, 46, 44);
+    //Apoio 2
+    indices.push(48, 49, 51);
+    indices.push(51, 50, 48);
+    indices.push(52, 53, 55);
+    indices.push(55, 54, 52);
+    indices.push(56, 57, 59);
+    indices.push(59, 58, 56);
+    indices.push(60, 61, 63);
+    indices.push(63, 62, 60);
+    indices.push(64, 65, 67);
+    indices.push(67, 66, 64);
+    indices.push(68, 69, 71);
+    indices.push(71, 70, 68);
+     
+    geometry.setIndex( indices );
+    
+    //Parede
+    geometry.addGroup(0, 6, 0);
+    geometry.addGroup(6, 6, 0);
+    geometry.addGroup(12, 6, 0);
+    geometry.addGroup(18, 6, 0);
+    geometry.addGroup(24, 6, 0);
+    geometry.addGroup(30, 6, 0);
+
+    //Apoio 1
+    geometry.addGroup(36, 6, 0);
+    geometry.addGroup(42, 6, 0);
+    geometry.addGroup(48, 6, 0);
+    geometry.addGroup(54, 6, 0);
+    geometry.addGroup(60, 6, 0);
+    geometry.addGroup(66, 6, 0);
+
+    //Apoio 2
+    geometry.addGroup(72, 6, 0);
+    geometry.addGroup(78, 6, 0);
+    geometry.addGroup(84, 6, 0);
+    geometry.addGroup(90, 6, 0);
+    geometry.addGroup(96, 6, 0);
+    geometry.addGroup(102, 6, 0);
+    
+    var quad_uvs =
+    [
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+
+    0.0, 1.0,
+    1.0, 1.0,
+    0.0, 0.0,
+    1.0, 0.0
+    ];
+    let uvs = new Float32Array(quad_uvs);
+    geometry.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
+    
+    geometry.computeVertexNormals();
+    
+    var materials = [
+        new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/colorMapBiombo.1001.png"), normalMap: new THREE.TextureLoader().load("../images/normalMapBiombo.1001.png")}),
+    ];
+        
+    var plane = new THREE.Mesh(geometry, materials);
+    plane.rotation.set(0, rot, 0);
+    plane.position.set(posx, posy, posz)
+    scene.add(plane);
+    objects.push(plane)
+}
+
+function loadTelhas() {
+    let posx = 56.9;
+    let posy = 4.913;
+    let posz = -21.65
+    let rotX = 9.54 * (Math.PI / 180);
+    let rotY = 31 * (Math.PI / 180);
+
+    console.log("A carregar telhas nas coordenadas (" + posx + "," + posy + "," + posz + ").")
+    var carregador = new GLTFLoader()
+    carregador.load(
+        "../Modelos_glb/Telhas.glb",
+        function (gltf) {
+            scene.add(gltf.scene)
+            gltf.scene.children.forEach(function (child) {
+                child.position.set(posx, posy, posz)
+                child.rotateY(rotY);
+                child.rotateX(rotX);
+                console.log(child)
+                for (var i = 0; i != 35; i++) {
+                    for (var j = 0; j != 38; j++) {
+                        let clone = child.clone();
+                        var movement = new Vector3(i * 0.297, (j * 0.36) * 0.0005, -j * 0.36).applyQuaternion(child.quaternion);
+                        clone.quaternion.copy(child.quaternion);
+                        clone.position.copy(child.position).add(movement);
+                        scene.add(clone);
+                        objects.push(clone);
+                    }
+                }
+            })
+        }
+    )
+    console.log("Modelo carregado...")
+}
+
+function loadRipaseBarrotes() {
+    let posx = 61.272;
+    let posy = 2.8953;
+    let posz = -24.455;
+    let rotY = 31 * (Math.PI / 180);
+    let rotX = 10.5 * (Math.PI / 180);
+
+    console.log("A carregar ripas e barrotes nas coordenadas (" + posx + "," + posy + "," + posz + ").")
+    var carregador = new GLTFLoader()
+    carregador.load(
+        "../Modelos_glb/RB.glb",
+        function (gltf) {
+            scene.add(gltf.scene)
+            gltf.scene.children.forEach(function (child) {
+                child.material.map = new TextureLoader().load("../images/colorMapBiombo.1001.png");
+                if (child.name == "RB1") {
+                    child.position.set(posx, posy, posz);
+                    child.rotateY(rotY);
+                    for (var i = 0; i != 15; i++) {
+                        let clone = child.clone();
+                        var movement = new Vector3(i * 0.6, 0, 0).applyQuaternion(child.quaternion);
+                        clone.quaternion.copy(child.quaternion);
+                        clone.position.copy(child.position).add(movement);
+                        scene.add(clone);
+                    }
+                    console.log(child);
+                } else if (child.name == "RB2") {
+                    child.position.set(posx, posy, posz);
+                    child.rotateY(rotY);
+                    for (var i = 0; i != 34; i++) {
+                        let clone = child.clone();
+                        var movement = new Vector3(0, -i * 0.0607, i * 0.362).applyQuaternion(child.quaternion);
+                        clone.quaternion.copy(child.quaternion);
+                        clone.position.copy(child.position).add(movement);
+                        scene.add(clone);
+                    }
+                    console.log(child);
+                } else if (child.name == "RB3") {
+                    child.position.set(posx, posy, posz);
+                    child.rotateY(rotY);
+                    for (var i = 0; i != 8; i++) {
+                        let clone = child.clone();
+                        var movement = new Vector3(0, -i * 0.258, i * 1.5).applyQuaternion(child.quaternion);
+                        clone.quaternion.copy(child.quaternion);
+                        clone.position.copy(child.position).add(movement);
+                        scene.add(clone);
+                    }
+                    console.log(child);
+                }
+            })
+        }
+    )
+    console.log("Modelo carregado...")
+}
+
+function loadGLB(modelo, x, y, z, rotationY) {
+    var rotY = rotationY * (Math.PI / 180);
+
     console.log("A carregar '" + modelo + "' nas coordenadas (" + x + "," + y + "," + z + ").")
     var carregador = new GLTFLoader()
     carregador.load(
@@ -405,11 +994,49 @@ function loadGLB(modelo, x, y, z, rotation) {
         function (gltf) {
             scene.add(gltf.scene)
             gltf.scene.children.forEach(function (child) {
-                child.castShadow = true;
-                child.receiveShadow = true;
                 child.position.set(x, y, z)
-                child.rotateY(rotation);
+                child.rotateY(rotY);
                 objects.push(child)
+                console.log(child)
+            })
+        }
+    )
+    console.log("Modelo carregado...")
+}
+
+function loadGLBwMap(modelo, x, y, z, rotationY, map) {
+    var rotY = rotationY * (Math.PI / 180);
+
+    console.log("A carregar '" + modelo + "' nas coordenadas (" + x + "," + y + "," + z + ").")
+    var carregador = new GLTFLoader()
+    carregador.load(
+        modelo,
+        function (gltf) {
+            scene.add(gltf.scene)
+            gltf.scene.children.forEach(function (child) {
+                child.position.set(x, y, z)
+                child.rotateY(rotY);
+                child.material.map = new TextureLoader().load(map);
+                objects.push(child)
+                console.log(child)
+            })
+        }
+    )
+    console.log("Modelo carregado...")
+}
+
+function loadGLBQuaternion(modelo, x, y, z, quaternion) {
+    console.log("A carregar '" + modelo + "' nas coordenadas (" + x + "," + y + "," + z + ").")
+    var carregador = new GLTFLoader()
+    carregador.load(
+        modelo,
+        function (gltf) {
+            scene.add(gltf.scene)
+            gltf.scene.children.forEach(function (child) {
+                child.position.set(x, y, z)
+                child.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+                objects.push(child)
+                console.log(child)
             })
         }
     )
@@ -445,6 +1072,8 @@ function initClouds() {
                     (Math.random() * 6000) - 3000
                 );
 
+                cloud.scale.set((Math.random()*0.4)+0.8, 1, (Math.random()*0.4)+0.8)
+
                 cloud.rotation.z = Math.random() * 360;
                 scene.add(cloud);
                 clouds.push(cloud);
@@ -454,30 +1083,30 @@ function initClouds() {
 }
 
 function changeClouds() {
-        clouds.forEach(cloud => cloud.material.opacity = (0.7*Math.exp(-Math.pow((effectController.hour - 12)/5.5, 10)) + 0.05));
+    clouds.forEach(cloud => cloud.material.opacity = (0.7 * Math.exp(-Math.pow((effectController.hour - 12) / 5.5, 10)) + 0.05));
 }
 
-function initStars(){
+function initStars() {
     let geometry = new THREE.BufferGeometry();
-
     let material = new THREE.PointsMaterial( { size: 2, sizeAttenuation: false, transparent: true } );
     material.color.set( new THREE.Color(255, 205, 60))
 
     let verticesNTyped = []
     let vertice = new THREE.Vector3();
-    for (let i = 0; i < 800; i ++ ) {
+    for (let i = 0; i < 600; i ++ ) {
         vertice.setFromSpherical(new THREE.Spherical(3000, (Math.random() < 0.5) ? ((Math.PI/2) * (Math.sqrt(Math.random()) + 1) + Math.PI*3/2) : (-(Math.PI/2) * (Math.sqrt(Math.random()) - 1) + Math.PI*3/2) , Math.PI * Math.random()))
         verticesNTyped.push(vertice.x);
         verticesNTyped.push(vertice.y);
         verticesNTyped.push(vertice.z);
-        
     }
     let vertices = new Float32Array(verticesNTyped)
 
-    geometry.setAttribute( 'position', new THREE.BufferAttribute(vertices, 3))
+    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
 
-    stars = new THREE.Points( geometry, material );
-    scene.add( stars );
+    stars = new THREE.Points(geometry, material);
+
+    console.log(stars)
+    scene.add(stars);
 }
 
 function changeStars() {
@@ -485,29 +1114,61 @@ function changeStars() {
 }
 
 function generateWalls() {
-    let geometry = new THREE.BoxGeometry(100, 100, 100);
-    let material = new THREE.MeshBasicMaterial({
-    })
+    let geometrySide = new THREE.BoxGeometry(1, 200, 200);
+    let geometrySide2 = new THREE.BoxGeometry(410, 200, 1)
+    let material = new THREE.MeshBasicMaterial( {visible: false} )
 
-    let cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
-    objects.push(cube);
+    let wall1 = new THREE.Mesh(geometrySide, material);
+    let wall2 = new THREE.Mesh(geometrySide, material);
+    let wall3 = new THREE.Mesh(geometrySide2, material);
+    let wall4 = new THREE.Mesh(geometrySide2, material);
+    
+    wall1.position.set(205, 0, 0);
+    wall2.position.set(-205, 0, 0);
+    wall3.position.set(0, 0, 100);
+    wall4.position.set(0, 0, -100)
+
+    scene.add(wall1);
+    scene.add(wall2);
+    scene.add(wall3);
+    scene.add(wall4);
+    objects.push(wall1);
+    objects.push(wall2);
+    objects.push(wall3);
+    objects.push(wall4);
+    walls.push(wall1);
+    walls.push(wall2);
+    walls.push(wall3);
+    walls.push(wall4);
 }
 
 //Hotspots
-function generateHotSpot(positionx, positiony, positionz, rotation, image) {
-    var texture = new THREE.TextureLoader().load(image);
-    var material = new THREE.MeshBasicMaterial({
-        map: texture
-    });
-    var geometry = new THREE.BoxGeometry(0, 5, 10);
-    var mesh = new THREE.Mesh(geometry, material);
-    var s = 0.5;
-    mesh.scale.set(s, s, s);
-    mesh.position.set(positionx, positiony, positionz); //mesh.receiveShadow = true;
+function generateHotSpot(positionx, positiony, positionz, rotation, text) {
+    var rot = rotation * (Math.PI / 180);
 
-    scene.add(mesh);
-    objectsHotspot.push(mesh); //Chao
+    var hotspot = document.createElement('canvas');
+    var g = hotspot.getContext('2d');
+    hotspot.width = 100;
+    hotspot.height = 100;
+    g.font = 'Bold 20px Arial';
+
+    g.fillStyle = 'white';
+    g.fillText(text, 0, 20);
+    g.strokeStyle = 'black';
+    g.strokeText(text, 0, 20);
+
+    var texture = new THREE.Texture(hotspot);
+    texture.needsUpdate = true;
+
+    var geometry = new THREE.PlaneGeometry(100, 100);
+    var material = new THREE.MeshPhongMaterial({ map: texture });
+
+    var meshText = new THREE.Mesh(geometry, material)
+
+    meshText.position.set(positionx, positiony, positionz); //mesh.receiveShadow = true;
+    meshText.rotateY(rot);
+
+    scene.add(meshText);
 
     positionx += 0.1;
 
@@ -516,10 +1177,14 @@ function generateHotSpot(positionx, positiony, positionz, rotation, image) {
         map: texture
     });
     geometry = new THREE.CircleGeometry(0.8, 32);
-    mesh = new THREE.Mesh(geometry, material);
+    var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(positionx, positiony, positionz);
-    mesh.rotation.y = rotation;
-    scene.add(mesh); //i chao
+
+    mesh.rotateY(rot);
+    scene.add(mesh);
+    objectsHotspot.push(mesh);
+
+    hotSpotMap.set(mesh, meshText);
 }
 
 
@@ -539,13 +1204,14 @@ function hotspotTest() {
     raycasterHotspot.setFromCamera(new Vector2(0, 0), camera);
 
     const hotspotIntersection = raycasterHotspot.intersectObjects(objectsHotspot);
-    console.log(raycasterHotspot)
     if (hotspotIntersection.length > 0) {
-        console.log(hotspotIntersection[0])
         if (hotspotIntersection[0].distance <= 10) {
-            console.log("a mostrar")
-            intersetado = hotspotIntersection[0].object;
-            intersetado.visible = true;
+            intersetado = hotSpotMap.get(hotspotIntersection[0].object);
+            if(!intersetado.visible) {
+                intersetado.visible = true;
+            } else {
+                intersetado.visible = false;
+            }
         } else {
             if (intersetado != null) {
                 intersetado.visible = false;
@@ -554,7 +1220,6 @@ function hotspotTest() {
         }
     } else {
         if (intersetado != null) {
-            console.log("lol")
             intersetado.visible = false;
             intersetado = null;
         }
@@ -562,6 +1227,8 @@ function hotspotTest() {
 }
 
 function cameraColision(raycaster, axis) {
+    wallCollision(raycaster);
+
     // verifica as interseções com os objetos
     raycaster.ray.origin.copy(controls.getObject().position);
 
@@ -579,9 +1246,30 @@ function cameraColision(raycaster, axis) {
     }
 }
 
+function wallCollision(raycaster) {
+    // verifica as interseções com os objetos
+    raycaster.ray.origin.copy(controls.getObject().position);
+
+    const intersections = raycaster.intersectObjects(walls, true);
+
+    if (intersections.length > 0) {
+
+        var x = document.getElementById("snackbar");
+
+        x.className = "show";
+
+        setTimeout(function() { x.className = x.className.replace("show", ""); }, 3000);
+
+    } else {
+
+        return false;
+
+    }
+}
+
 function doCloudTick() {
-    clouds.forEach(function(cloud) {
-        if(cloud.position.x < 3000) {
+    clouds.forEach(function (cloud) {
+        if (cloud.position.x < 3000) {
             cloud.position.x += 0.2;
         } else {
             cloud.position.x = -3000
@@ -596,8 +1284,8 @@ function animate(nebula, app) {
     const time = performance.now();
 
     objectsHotspot.forEach(object => {
-        if (object.visible && controls.getObject().position.distanceTo(object.position) > 10) {
-            object.visible = false;
+        if (hotSpotMap.get(object).visible && controls.getObject().position.distanceTo(hotSpotMap.get(object).position) > 10) {
+            hotSpotMap.get(object).visible = false;
         }
     });
 
@@ -690,17 +1378,22 @@ function animate(nebula, app) {
 
         controls.getObject().position.y += (velocity.y * delta); // new behavior
     }
+
     cloudTicker++;
-    if(cloudTicker==1) {
+    if (cloudTicker == 1) {
         doCloudTick()
-        cloudTicker=0;
+        cloudTicker = 0;
     }
 
     if(effectController.autoUpdate){
         updateHours()
         updateSky()
     }
-    
+
+    if (controls.getObject().position.y < -80) {
+        controls.getObject().position.setY(20);
+    }
+
     prevTime = time;
 
     renderer.render(scene, camera);
