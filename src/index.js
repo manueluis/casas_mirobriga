@@ -187,13 +187,13 @@ function initRenderer() {
     document.body.appendChild(renderer.domElement);
 }
 
-function skyUpdate(){
+function updateSky(){
     const uniforms = sky.material.uniforms;
 
     const dia = effectController.hour>=6 && effectController.hour<18;
     const manha = effectController.hour<12;
     const nascerSol = effectController.hour>=5 && effectController.hour<6
-    const porSol = effectController.hour>=18 && effectController.hour<19
+    const porSol = effectController.hour>18 && effectController.hour<=19
     
     const auxRepeatValue = (Math.round(effectController.hour/12))*12;
     const auxTrigValue = Math.PI*(effectController.hour-auxRepeatValue)/(dia ? 12 : 10);
@@ -204,7 +204,7 @@ function skyUpdate(){
     sun.setFromSphericalCoords(1, phi, theta);
     
     uniforms['sunPosition'].value.copy(sun);
-    uniforms['turbidity'].value = dia ? auxTurbValue * 1 + 2 : auxTurbValue * 2.95 + 0.05;
+    uniforms['turbidity'].value = dia ? auxTurbValue + 2 : auxTurbValue * 2.95 + 0.05;
     uniforms['rayleigh'].value = (Math.exp(-Math.pow(4*effectController.hour - (manha ? 25.3 : 70.7), 6)) * 3.5 + 0.5);
     uniforms['mieCoefficient'].value = (Math.exp(-Math.pow(1.4*effectController.hour - (manha ? 7.6 : 26), 8)) * 0.4 + 0.1);
     uniforms['mieDirectionalG'].value = (-Math.exp(-Math.pow(1.1*effectController.hour - (manha ? 6 : 20.4), 20)) * 0.899 + 0.999);
@@ -233,7 +233,7 @@ function initControllers(){
 
     ambienteFolder.add(effectController, 'hour', 0, 24, 0.01).name("Hora do dia").listen().onChange(function(){
         effectController.autoUpdate = false;
-        skyUpdate()
+        updateSky()
     });
 
     ambienteFolder.add(effectController, 'autoUpdate').name("Hora automática").listen().onChange(function(){
@@ -251,7 +251,7 @@ function initSky() {
     sky.scale.setScalar(450000);
     scene.add(sky);
     sun = new THREE.Vector3();
-    skyUpdate()
+    updateSky()
 }
 
 //Luzes
@@ -3972,7 +3972,7 @@ function initClouds() {
     loader.load(
         '../images/cloud.png',
         function onLoad(texture) {
-            const cloudGeometry = new THREE.CircleBufferGeometry((Math.random() * 600) + 450, (Math.random() * 600) + 450);// pk é que tem o random????
+            const cloudGeometry = new THREE.CircleBufferGeometry((Math.random() * 600) + 450, (Math.random() * 600) + 450);
 
             cloudMaterial = new THREE.MeshBasicMaterial({
                 map: texture,
@@ -4013,8 +4013,8 @@ function initStars() {
 
     let verticesNTyped = []
     let vertice = new THREE.Vector3();
-    for (let i = 0; i < 600; i++) {
-        vertice.setFromSpherical(new THREE.Spherical(4000 + Math.random()*1000, (Math.random() > 0.5) ? (-(Math.PI / 2) * (Math.sqrt(Math.random()) - 1) + Math.PI * 3 / 2) : (-(Math.PI / 2) * (-Math.sqrt(Math.random()) - 1) + Math.PI * 3 / 2), Math.PI * Math.random()))
+    for (let i = 0; i < 600; i ++ ) {
+        vertice.setFromSpherical(new THREE.Spherical(3000, (Math.random() < 0.5) ? ((Math.PI/2) * (Math.sqrt(Math.random()) + 1) + Math.PI*3/2) : (-(Math.PI/2) * (Math.sqrt(Math.random()) - 1) + Math.PI*3/2) , Math.PI * Math.random()))
         verticesNTyped.push(vertice.x);
         verticesNTyped.push(vertice.y);
         verticesNTyped.push(vertice.z);
@@ -4336,7 +4336,7 @@ function animate(nebula, app) {
 
     if(effectController.autoUpdate){
         updateHours()
-        skyUpdate()
+        updateSky()
     }
 
     if (controls.getObject().position.y < -80) {
