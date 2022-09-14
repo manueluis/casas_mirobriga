@@ -34,6 +34,8 @@ let hotSpotMap = new Map();
 
 let sky, sun;
 
+let lucernaTimer = 0;
+
 const cameraFloorDistance = 1.3;
 const cameraColisionDistance = 0.2;
 const cameraMass = 10;
@@ -169,8 +171,19 @@ function init() {
 
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
+    //61.272; 2.8953; -24.455
+    generateHotSpot(61.272, 4.25, -24, 31, ['Este edificio era composto por duas Tabernae e um armazém.', 
+                                         'Não existem evidências de portas do armazém para o exterior, por isso supomos', 
+                                         'que existiam dois acessos pelas Tabernae através de escadas.']);
 
-    generateHotSpot(61.272, 4, -24, 31, 'Este edificio era composto por duas Tabernae e um armazém. Não existem evidências de portas do armazém para o exterior, por isso supomos que existiam dois acessos pelas Tabernae através de escadas.')
+    generateHotSpot(61.272-4.9777, 4.45, -24.455-3.2212, 211, ['Durante as escavações descobriu-se que existiam',
+                                                              'três dolias para armazenamento de comida e um biombo',
+                                                              'que servia como divisoria da Tabernae.']);
+
+    generateHotSpot(61.272+0.47438, 4.45, -24.455 - 4.37, 31, ['Não existe evidencia que existia um moinho neste espaço.',
+                                                              'No entanto é uma sugestão para compreender melhor o mundo romano.',
+                                                              'O moinho era composto por duas pedras que faziam fricção',
+                                                              'entre si ao serem movidas por um homem ou um burro.']);
 }
 
 function updateHours(){
@@ -287,14 +300,14 @@ function loadTabernae() {
     let posx = 61.272; let posy = 2.8953; let posz = -24.455; let rot = 31;
 
     loadTabernaeTex(posx, posy, posz, rot);
-    //loadGlbScene('../Modelos_glb/Escada.glb', posx - 7.2992, posy + 0.22, posz - 4.4689, rot);
-    //loadGlbScene('../Modelos_glb/Escada.glb', posx - 0.51904, posy + 0.22, posz - 8.5429, rot);
+    loadGlbScene('../Modelos_glb/Escada.glb', posx - 7.2992, posy + 0.22, posz - 4.4689, rot);
+    loadGlbScene('../Modelos_glb/Escada.glb', posx - 0.51904, posy + 0.22, posz - 8.5429, rot);
     loadBancada(posx-4.784, posy+0.1987, posz-1.265, rot);
     loadBiombo(posx-5.2333, posy, posz-2.7702, rot+90);
     loadGLB('../Modelos_glb/Dolium.glb', posx-5.3469, posy+0.1987, posz-3.0012, rot);
     loadGLB('../Modelos_glb/Dolium.glb', posx-4.9777, posy+0.1987, posz-3.2212, rot);
     loadGLB('../Modelos_glb/Dolium.glb', posx-4.6088, posy+0.1987, posz-3.4502, rot);
-    //loadGlbScene('../Modelos_glb/Moinho.glb', posx+0.47438, posy+0.73, posz - 4.37, 30)
+    //loadGlbScene('../Modelos_glb/Moinho.glb', posx+0.47438, posy+0.73, posz - 4.37, 30);
     loadTelhas();
     loadRipaseBarrotes();
 }
@@ -308,6 +321,7 @@ function loadLucerna() {
             scene.add(gltf.scene)
             gltf.scene.children.forEach(function (child) {
                 lucerna = child;
+                lucerna.setPosition(0, -100, 0);
             })
         }
     )
@@ -1469,69 +1483,69 @@ function loadTabernaeTex(posx, posy, posz, rotation) {
         new THREE.Vector3(-4.475, 1.0188, -0.3),
 
         //Parede Externa Direita
-        new THREE.Vector3(4.475, 2.2066, -8.057),
-        new THREE.Vector3(4.475, 3.1766, -7.9),
-        new THREE.Vector3(4.475, 3.2265, -8.2),
-        new THREE.Vector3(4.475, 2.25, -8.2),
-        
-        new THREE.Vector3(4.475, 3.1766, -7.9),
-        new THREE.Vector3(4.475, 3.3724, -7.8653),
-        new THREE.Vector3(4.475, 3.2265, -8.2),
+        new THREE.Vector3(4.475, 3.1622, -7.9052),
+        new THREE.Vector3(4.475, 3.212, -8.2),
         new THREE.Vector3(4.475, 3.4287, -8.2),
-        
-        new THREE.Vector3(4.475, 1.5674, -8.2),
-        new THREE.Vector3(4.475, 2.2066, -8.057),
+        new THREE.Vector3(4.475, 3.3732, -7.87),
+
+        new THREE.Vector3(4.475, 2.2079, -8.0611),
         new THREE.Vector3(4.475, 2.25, -8.2),
+        new THREE.Vector3(4.475, 3.212, -8.2),
+        new THREE.Vector3(4.475, 3.1622, -7.9052),
 
-        new THREE.Vector3(4.475, 2.5163, -3.9449),
-        new THREE.Vector3(4.475, 2.709, -3.918),
-        new THREE.Vector3(4.475, 3.2265, -8.2),
-        new THREE.Vector3(4.475, 3.4287, -8.2),
-
+        new THREE.Vector3(4.475, 1.4513, -8.2),
+        new THREE.Vector3(4.475, 2.25, -8.2),
+        new THREE.Vector3(4.475, 2.2079, -8.0611),
+        
+        new THREE.Vector3(4.475, 2.4926, -3.9439),
+        new THREE.Vector3(4.475, 3.1622, -7.9052),
+        new THREE.Vector3(4.475, 3.3732, -7.87),
+        new THREE.Vector3(4.475, 2.7085, -3.9152),
+        
         new THREE.Vector3(4.475, 1.25, -4.9),
-        new THREE.Vector3(4.475, 2.6757, -4.9),
-        new THREE.Vector3(4.475, 2.2066, -8.057),
-        new THREE.Vector3(4.475, 3.1766, -7.9),
-
-        new THREE.Vector3(4.475, 1.25, -4.7),
-        new THREE.Vector3(4.475, 2.6423, -4.7),
-        new THREE.Vector3(4.475, 1.25, -4.9),
-        new THREE.Vector3(4.475, 2.6757, -4.9),
-
-        new THREE.Vector3(4.475, 1.1456, -4.118),
-        new THREE.Vector3(4.475, 2.5163, -3.9449),
-        new THREE.Vector3(4.475, 1.0, -4.7),
-        new THREE.Vector3(4.475, 2.6423, -4.7),
-
+        new THREE.Vector3(4.475, 2.2079, -8.0611),
+        new THREE.Vector3(4.475, 3.1622, -7.9052),
+        new THREE.Vector3(4.475, 2.6539, -4.9),
+        
         new THREE.Vector3(4.475, 1.0, -4.9),
+        new THREE.Vector3(4.475, 1.4513, -8.2),
+        new THREE.Vector3(4.475, 2.2079, -8.0611),
         new THREE.Vector3(4.475, 1.25, -4.9),
-        new THREE.Vector3(4.475, 1.5674, -8.2),
-        new THREE.Vector3(4.475, 2.2066, -8.057),
-
+        
         new THREE.Vector3(4.475, 0.2, -4.9),
-        new THREE.Vector3(4.475, 1.0, -4.9),
         new THREE.Vector3(4.475, 0.2, -8.2),
-        new THREE.Vector3(4.475, 1.5674, -8.2),
-
+        new THREE.Vector3(4.475, 1.4513, -8.2),
+        new THREE.Vector3(4.475, 1.0, -4.9),
+        
+        new THREE.Vector3(4.475, 1.25, -4.7),
+        new THREE.Vector3(4.475, 1.25, -4.9),
+        new THREE.Vector3(4.475, 2.6539, -4.9),
+        new THREE.Vector3(4.475, 2.6201, -4.7),
+        
         new THREE.Vector3(4.475, 0.2, -4.7),
-        new THREE.Vector3(4.475, 1.0, -4.7),
         new THREE.Vector3(4.475, 0.2, -4.9),
         new THREE.Vector3(4.475, 1.0, -4.9),
-
-        new THREE.Vector3(4.475, 0.2, -4.2541),
-        new THREE.Vector3(4.475, 1.1456, -4.118),
-        new THREE.Vector3(4.475, 0.2, -4.7),
         new THREE.Vector3(4.475, 1.0, -4.7),
-
-        new THREE.Vector3(4.475, 1.92, -0.3),
-        new THREE.Vector3(4.475, 2.084, -0.3),
-        new THREE.Vector3(4.475, 2.5163, -3.9449),
-        new THREE.Vector3(4.475, 2.709, -3.918),
-
+        
+        new THREE.Vector3(4.475, 0.2, -4.3238),
+        new THREE.Vector3(4.475, 0.2, -4.7),
+        new THREE.Vector3(4.475, 2.6201, -4.7),
+        new THREE.Vector3(4.475, 2.4926, -3.9439),
+        
+        new THREE.Vector3(4.475, 1.8793, -0.3),
+        new THREE.Vector3(4.475, 2.4926, -3.9439),
+        new THREE.Vector3(4.475, 2.7085, -3.9152),
+        new THREE.Vector3(4.475, 2.1, -0.3),
+        
+        new THREE.Vector3(4.475, 0.2, -0.81558),
+        new THREE.Vector3(4.475, 0.2, -4.3238),
+        new THREE.Vector3(4.475, 2.4926, -3.9439),
+        new THREE.Vector3(4.475, 1.9716, -0.81558),
+        
         new THREE.Vector3(4.475, 0.2, -0.3),
-        new THREE.Vector3(4.475, 1.92, -0.3),
-        new THREE.Vector3(4.475, 0.2, -4.2541),
-        new THREE.Vector3(4.475, 2.5163, -3.9449),
+        new THREE.Vector3(4.475, 0.2, -0.81558),
+        new THREE.Vector3(4.475, 1.9716, -0.81558),
+        new THREE.Vector3(4.475, 1.8793, -0.3),
 
         //Chão Armazem
         new THREE.Vector3(4.475, 2.25, -8.8),
@@ -1986,75 +2000,131 @@ function loadTabernaeTex(posx, posy, posz, rotation) {
         new THREE.Vector3(5.075, 2.25, -13.1),
 
         //Parede Externa Esquerda
-        new THREE.Vector3(-5.075, 2.0, 0.3),
-        new THREE.Vector3(-5.075, 2.3, -1.481),
         new THREE.Vector3(-5.075, 0.0, 0.3),
+        new THREE.Vector3(-5.075, 2.0, 0.3),
         new THREE.Vector3(-5.075, 0.0, -1.481),
-        
         new THREE.Vector3(-5.075, 2.3, -1.481),
-        new THREE.Vector3(-5.075, 2.6, -3.26),
-        new THREE.Vector3(-5.075, 0.0, -1.481),
-        new THREE.Vector3(-5.075, 0.37, -3.68),
-
 
         new THREE.Vector3(-5.075, 0.0, -1.481),
-        new THREE.Vector3(-5.075, 0.37, -3.68),
-        new THREE.Vector3(-5.075, 0.0, -3.76),
+        new THREE.Vector3(-5.075, 2.3, -1.481),
+        new THREE.Vector3(-5.075, 0.3734, -3.68),
+        new THREE.Vector3(-5.075, 2.6, -3.2581),
 
 
-        new THREE.Vector3(-5.075, 3.2, -6.97),
-        new THREE.Vector3(-5.075, 2.6, -3.26),
-        new THREE.Vector3(-5.075, 1.25, -7.59),
-        new THREE.Vector3(-5.075, 1.25, -3.51),
+        new THREE.Vector3(-5.075, 0.3734, -3.68),
+        new THREE.Vector3(-5.075, 2.6, -3.2581),
+        new THREE.Vector3(-5.075, 1.0344, -7.575),
+        new THREE.Vector3(-5.075, 3.2, -6.839),
+
+        new THREE.Vector3(-5.075, 1.0344, -7.575),
+        new THREE.Vector3(-5.075, 3.2, -6.839),
+        new THREE.Vector3(-5.075, 1.291, -7.575),
+        new THREE.Vector3(-5.075, 3.222, -6.973),
         
-        new THREE.Vector3(-5.075, 1.25, -7.59),
-        new THREE.Vector3(-5.075, 1.25, -3.51),
-        new THREE.Vector3(-5.075, 1.0, -7.575),
-        new THREE.Vector3(-5.075, 0.37, -3.68),
 
-
-        new THREE.Vector3(-5.075, 0.37, -3.68),
-        new THREE.Vector3(-5.075, 1.0, -7.575),
-        new THREE.Vector3(-5.075, 0.0, -3.76),
+        new THREE.Vector3(-5.075, 0.0, -3.7586),
+        new THREE.Vector3(-5.075, 0.3734, -3.68),
         new THREE.Vector3(-5.075, 0.0, -7.575),
+        new THREE.Vector3(-5.075, 1.0344, -7.575),
         
-        new THREE.Vector3(-5.075, 1.0, -7.575),
-        new THREE.Vector3(-5.075, 1.0, -7.62),
-        new THREE.Vector3(-5.075, 0.0, -7.575),
-        new THREE.Vector3(-5.075, 0.0, -7.79),
-
-
-        new THREE.Vector3(-5.075, 1.0, -7.62),
-        new THREE.Vector3(-5.075, 1.0, -7.725),
-        new THREE.Vector3(-5.075, 0.0, -7.79),
-        new THREE.Vector3(-5.075, 0.0, -8.8),
+        new THREE.Vector3(-5.075, 3.5295, -8.8),
+        new THREE.Vector3(-5.075, 1.25, -8.8),
+        new THREE.Vector3(-5.075, 1.25, -7.5877),
+        new THREE.Vector3(-5.075, 3.2224, -6.9731),
         
-        new THREE.Vector3(-5.075, 1.06, -7.725),
-        new THREE.Vector3(-5.075, 1.2435, -8.8),
-        new THREE.Vector3(-5.075, 1.0, -7.725),
-        new THREE.Vector3(-5.075, 0.0, -8.8),
-
-
-        new THREE.Vector3(-5.075, 3.22, -6.97),
-        new THREE.Vector3(-5.075, 3.35, -7.725),
-        new THREE.Vector3(-5.075, 1.25, -7.59),
+        new THREE.Vector3(-5.075, 1.25, -8.8),
+        new THREE.Vector3(-5.075, 1.0595, -7.725),
         new THREE.Vector3(-5.075, 1.25, -7.725),
-        
-        new THREE.Vector3(-5.075, 3.35, -7.725),
-        new THREE.Vector3(-5.075, 3.53, -8.8),
-        new THREE.Vector3(-5.075, 1.06, -7.725),
-        new THREE.Vector3(-5.075, 1.24, -8.8),
-        
-        new THREE.Vector3(-5.075, 3.53, -8.8),
-        new THREE.Vector3(-5.075, 3.93, -11.173),
-        new THREE.Vector3(-5.075, 2.25, -8.8),
-        new THREE.Vector3(-5.075, 2.25, -11.511),
 
-        
-        new THREE.Vector3(-5.075, 3.93, -11.173),
-        new THREE.Vector3(-5.075, 4.25, -13.1),
+        new THREE.Vector3(-5.075, 3.9284, -11.173),
         new THREE.Vector3(-5.075, 2.25, -11.511),
+        new THREE.Vector3(-5.075, 2.25, -8.8),
+        new THREE.Vector3(-5.075, 3.5295, -8.8),
+
+        new THREE.Vector3(-5.075, 4.25, -13.1),
         new THREE.Vector3(-5.075, 2.25, -13.1),
+        new THREE.Vector3(-5.075, 2.25, -11.511),
+        new THREE.Vector3(-5.075, 3.9284, -11.173),
+        
+        new THREE.Vector3(-5.075, 1.25, -7.5877),
+        new THREE.Vector3(-5.075, 1.25, -7.575),
+        new THREE.Vector3(-5.075, 1.2908, -7.575),
+
+        new THREE.Vector3(-5.075, 1.0, -7.6194),
+        new THREE.Vector3(-5.075, 0.0, -7.7914),
+        new THREE.Vector3(-5.075, 0.0, -7.575),
+        new THREE.Vector3(-5.075, 1.0, -7.575),
+
+        new THREE.Vector3(-5.075, 1.2435, -8.8),
+        new THREE.Vector3(-5.075, 0.0, -8.8),
+        new THREE.Vector3(-5.075, 1.0, -7.725),
+        new THREE.Vector3(-5.075, 1.0595, -7.725),
+    
+        //Parede Externa Direita
+        new THREE.Vector3(5.075, 0.33945, 0.3),
+        new THREE.Vector3(5.075, 0.61147, -1.3428),
+        new THREE.Vector3(5.075, 2.2574, -1.2312),
+        new THREE.Vector3(5.075, 2.0, 0.3),
+
+        new THREE.Vector3(5.075, 0.0, 0.3),
+        new THREE.Vector3(5.075, 0.0, -1.3961),
+        new THREE.Vector3(5.075, 0.61147, -1.3428),
+        new THREE.Vector3(5.075, 0.33945, 0.3),
+
+        new THREE.Vector3(5.075, 0.61147, -1.3428),
+        new THREE.Vector3(5.075, 1.1241, -4.725),
+        new THREE.Vector3(5.075, 2.8446, -4.725),
+        new THREE.Vector3(5.075, 2.2574, -1.2312),
+
+        new THREE.Vector3(5.075, 1.25, -4.725),
+        new THREE.Vector3(5.075, 1.25, -4.875),
+        new THREE.Vector3(5.075, 2.8698, -4.875),
+        new THREE.Vector3(5.075, 2.8446, -4.725),
+
+        new THREE.Vector3(5.075, 1.1522, -4.875),
+        new THREE.Vector3(5.075, 1.2073, -5.2757),
+        new THREE.Vector3(5.075, 2.9279, -5.2207),
+        new THREE.Vector3(5.075, 2.8698, -4.875),
+
+        new THREE.Vector3(5.075, 0.0, -1.3961),
+        new THREE.Vector3(5.075, 0.0, -4.725),
+        new THREE.Vector3(5.075, 1.1241, -4.725),
+        new THREE.Vector3(5.075, 0.61147, -1.3428),
+
+        new THREE.Vector3(5.075, 0.0, -4.725),
+        new THREE.Vector3(5.075, 0.0, -4.875),
+        new THREE.Vector3(5.075, 1.0, -4.875),
+        new THREE.Vector3(5.075, 1.0, -4.725),
+
+        new THREE.Vector3(5.075, 1.0, -4.875),
+        new THREE.Vector3(5.075, 0.89538, -5.2857),
+        new THREE.Vector3(5.075, 1.2073, -5.2757),
+        new THREE.Vector3(5.075, 1.1522, -4.875),
+    
+        new THREE.Vector3(5.075, 1.2073, -5.2757),
+        new THREE.Vector3(5.075, 1.7641, -8.8),
+        new THREE.Vector3(5.075, 3.5295, -8.8),
+        new THREE.Vector3(5.075, 2.9279, -5.2207),
+    
+        new THREE.Vector3(5.075, 2.25, -8.8),
+        new THREE.Vector3(5.075, 2.25, -9.3971),
+        new THREE.Vector3(5.075, 3.5947, -9.188),
+        new THREE.Vector3(5.075, 3.5295, -8.8),
+        
+        new THREE.Vector3(5.075, 0.89538, -5.2857),
+        new THREE.Vector3(5.075, 0.0, -8.8),
+        new THREE.Vector3(5.075, 1.7641, -8.8),
+        new THREE.Vector3(5.075, 1.2073, -5.2757),
+    
+        new THREE.Vector3(5.075, 2.25, -9.3971),
+        new THREE.Vector3(5.075, 2.25, -11.679),
+        new THREE.Vector3(5.075, 4.0134, -11.679),
+        new THREE.Vector3(5.075, 3.5947, -9.188),
+        
+        new THREE.Vector3(5.075, 2.25, -11.679),
+        new THREE.Vector3(5.075, 2.4886, -13.1),
+        new THREE.Vector3(5.075, 4.25, -13.1),
+        new THREE.Vector3(5.075, 4.0134, -11.679),
     ];
         
     var geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -2206,31 +2276,43 @@ function loadTabernaeTex(posx, posy, posz, rotation) {
     indices.push(255, 254, 252);
 
     //Parede Externa Direita
-    indices.push(256, 257, 259);
-    indices.push(259, 258, 256);
-    indices.push(260, 261, 263);
-    indices.push(263, 262, 260);
-    indices.push(264, 265, 266);
-    indices.push(267, 268, 270);
-    indices.push(270, 269, 267);
-    indices.push(271, 272, 274);
-    indices.push(274, 273, 271);
-    indices.push(275, 276, 278);
-    indices.push(278, 277, 275);
-    indices.push(279, 280, 282);
-    indices.push(282, 281, 279);
-    indices.push(283, 284, 286);
-    indices.push(286, 285, 283);
-    indices.push(287, 288, 290);
-    indices.push(290, 289, 287);
-    indices.push(291, 292, 294);
-    indices.push(294, 293, 291);
-    indices.push(295, 296, 298);
-    indices.push(298, 297, 295);
-    indices.push(299, 300, 302);
-    indices.push(302, 301, 299);
-    indices.push(303, 304, 306);
-    indices.push(306, 305, 303);
+    indices.push(258, 257, 256);
+    indices.push(256, 259, 258);
+
+    indices.push(262, 261, 260);
+    indices.push(260, 263, 262);
+
+    indices.push(266, 265, 264);
+
+    indices.push(269, 268, 267);
+    indices.push(267, 270, 269);
+
+    indices.push(273, 272, 271);
+    indices.push(271, 274, 273);
+
+    indices.push(277, 276, 275);
+    indices.push(275, 278, 277);
+
+    indices.push(281, 280, 279);
+    indices.push(279, 282, 281);
+
+    indices.push(285, 284, 283);
+    indices.push(283, 286, 285);
+
+    indices.push(289, 288, 287);
+    indices.push(287, 290, 289);
+
+    indices.push(293, 292, 291);
+    indices.push(291, 294, 293);
+
+    indices.push(297, 296, 295);
+    indices.push(295, 298, 297);
+
+    indices.push(301, 300, 299);
+    indices.push(299, 302, 301);
+
+    indices.push(305, 304, 303);
+    indices.push(303, 306, 305);
 
     //Chão Armazem
     indices.push(307, 308, 310);
@@ -2424,6 +2506,7 @@ function loadTabernaeTex(posx, posy, posz, rotation) {
     indices.push(635, 636, 638);
     indices.push(638, 637, 635);
 
+    //Exterior Traseira
     indices.push(639, 640, 642);
     indices.push(642, 641, 639);
     indices.push(643, 644, 646);
@@ -2433,48 +2516,78 @@ function loadTabernaeTex(posx, posy, posz, rotation) {
     indices.push(651, 652, 654);
     indices.push(654, 653, 651);
 
-    //Exterior Traseira
+    //Exterior Esquerda
     indices.push(655, 656, 658);
     indices.push(658, 657, 655);
     indices.push(659, 660, 662);
     indices.push(662, 661, 659);
+
     indices.push(663, 664, 666);
     indices.push(666, 665, 663);
     indices.push(667, 668, 670);
     indices.push(670, 669, 667);
 
-    //Exterior Esquerda
-    indices.push(671, 672, 674);
-    indices.push(674, 673, 671);
-    indices.push(675, 676, 678);
-    indices.push(678, 677, 675);
+    indices.push(671, 672, 673);
+    indices.push(673, 674, 671);
 
-    indices.push(679, 680, 681);
+    indices.push(675, 676, 677);
 
-    indices.push(682, 683, 685);
-    indices.push(685, 684, 682);
-    indices.push(686, 687, 689);
-    indices.push(689, 688, 686);
+    indices.push(678, 679, 680);
+    indices.push(680, 681, 678);
+    
+    indices.push(682, 683, 684);
+    indices.push(684, 685, 682);
+    
+    indices.push(686, 687, 688);
 
-    indices.push(690, 691, 693);
-    indices.push(693, 692, 690);
-    indices.push(694, 695, 697);
-    indices.push(697, 696, 694);
+    indices.push(689, 690, 691);
+    indices.push(691, 692, 689);
 
-    indices.push(698, 699, 701);
-    indices.push(701, 700, 698);
-    indices.push(702, 703, 705);
-    indices.push(705, 704, 702);
+    indices.push(693, 694, 695);
+    indices.push(695, 696, 693);
 
-    indices.push(706, 707, 709);
-    indices.push(709, 708, 706);
-    indices.push(710, 711, 713);
-    indices.push(713, 712, 710);
-    indices.push(714, 715, 717);
-    indices.push(717, 716, 714);
+    indices.push(697, 698, 699);
+    indices.push(699, 700, 697);
 
-    indices.push(718, 719, 721);
-    indices.push(721, 720, 718);
+    //Parede Exterior Direita
+    indices.push(701, 702, 703);
+    indices.push(703, 704, 701);
+
+    indices.push(705, 706, 707);
+    indices.push(707, 708, 705);
+
+    indices.push(709, 710, 711);
+    indices.push(711, 712, 709);
+
+    indices.push(713, 714, 715);
+    indices.push(715, 716, 713);
+
+    indices.push(717, 718, 719);
+    indices.push(719, 720, 717);
+    
+    indices.push(721, 722, 723);
+    indices.push(723, 724, 721);
+
+    indices.push(725, 726, 727);
+    indices.push(727, 728, 725);
+
+    indices.push(729, 730, 731);
+    indices.push(731, 732, 729);
+
+    indices.push(733, 734, 735);
+    indices.push(735, 736, 733);
+
+    indices.push(737, 738, 739);
+    indices.push(739, 740, 737);
+    
+    indices.push(741, 742, 743);
+    indices.push(743, 744, 741);
+
+    indices.push(745, 746, 747);
+    indices.push(747, 748, 745);
+
+    indices.push(749, 750, 751);
+    indices.push(751, 752, 749);
      
     geometry.setIndex( indices );
     
@@ -2562,18 +2675,21 @@ function loadTabernaeTex(posx, posy, posz, rotation) {
     geometry.addGroup(372, 6, 21);
 
     //Parede Externa Direita
-    geometry.addGroup(378, 6, 16);
-    geometry.addGroup(384, 6, 17);
+    geometry.addGroup(378, 6, 17);
+    geometry.addGroup(384, 6, 16);
     geometry.addGroup(390, 3, 16);
+
     geometry.addGroup(393, 6, 11);
+
     geometry.addGroup(399, 6, 10);
     geometry.addGroup(405, 6, 10);
     geometry.addGroup(411, 6, 10);
     geometry.addGroup(417, 6, 10);
     geometry.addGroup(423, 6, 10);
     geometry.addGroup(429, 6, 10);
-    geometry.addGroup(435, 6, 10);
-    geometry.addGroup(441, 6, 5);
+
+    geometry.addGroup(435, 6, 5);
+    geometry.addGroup(441, 6, 4);
     geometry.addGroup(447, 6, 4);
 
     //Chão Armazem
@@ -2694,23 +2810,46 @@ function loadTabernaeTex(posx, posy, posz, rotation) {
     //Exterior Esquerda
     geometry.addGroup(969, 6, 2);
     geometry.addGroup(975, 6, 2);
-    
-    geometry.addGroup(981, 3, 1);
-    
-    geometry.addGroup(984, 6, 8);
-    geometry.addGroup(990, 6, 8);
-    
-    geometry.addGroup(996, 6, 7);
-    geometry.addGroup(1002, 6, 7);
-    
-    geometry.addGroup(1008, 6, 13);
-    geometry.addGroup(1014, 6, 13);
-    
-    geometry.addGroup(1020, 6, 14);
-    geometry.addGroup(1026, 6, 14);
-    geometry.addGroup(1032, 6, 14);
 
-    geometry.addGroup(1038, 6, 20);
+    geometry.addGroup(981, 6, 8);
+    geometry.addGroup(987, 6, 8);
+    
+    geometry.addGroup(993, 6, 7);
+    
+    geometry.addGroup(999, 6, 14);
+    geometry.addGroup(1005, 6, 14);
+
+    geometry.addGroup(1011, 3, 14);
+
+    geometry.addGroup(1014, 6, 14);
+
+    geometry.addGroup(1020, 6, 20);
+
+    geometry.addGroup(1026, 3, 14);
+
+    geometry.addGroup(1029, 6, 7);
+
+
+    //Parede Exterior Direita
+    geometry.addGroup(1035, 6, 21);
+
+    geometry.addGroup(1041, 6, 20);
+
+    geometry.addGroup(1047, 6, 15);
+    geometry.addGroup(1053, 6, 15);
+    geometry.addGroup(1059, 6, 15);
+    
+    geometry.addGroup(1065, 6, 14);
+    geometry.addGroup(1071, 6, 14);
+    geometry.addGroup(1077, 6, 14);
+
+    geometry.addGroup(1083, 6, 9);
+    geometry.addGroup(1089, 6, 9);
+    
+    geometry.addGroup(1095, 6, 8);
+
+    geometry.addGroup(1101, 6, 3);
+    geometry.addGroup(1107, 6, 3);
 
     var quad_uvs =
     [
@@ -3045,69 +3184,69 @@ function loadTabernaeTex(posx, posy, posz, rotation) {
         0.751, 0.0,
 
         //Parede Externa Direita
-        0.759, 0.0,
-        1.0, 0.0,
-        0.764, 0.035,
-        1.0, 0.076,
-
-        0.054, 0.085,
-        0.0, 0.076,
-        0.054, 0.0,
         0.0, 0.0,
+        0.0, 0.075,
+        0.054, 0.084,
+        0.054, 0.0,
 
-        0.764, 0.035,
         0.759, 0.0,
-        0.561, 0.0,
+        0.764, 0.035,
+        1.0, 0.075,
+        1.0, 0.0,
 
-        0.054, 1.0,
+        0.571, 0.0,
+        0.764, 0.035,
+        0.759, 0.0, 
+
+        0.0, 0.0,
         0.0, 1.0,
+        0.054, 1.0,
         0.054, 0.0,
-        0.0, 0.0,
 
+        0.652, 0.201,
+        0.759, 1.0,
         1.0, 1.0,
-        0.759, 1.0,
-        1.0, 0.241,
-        0.652, 0.201,
+        1.0, 0.242,
 
-        1.0, 0.241,
-        0.652, 0.201,
-        1.0, 0.191,
-        0.652, 0.148,
-
-        1.0, 0.191,
-        0.597, 0.137,
-        1.0, 0.0,
-        0.655, 0.0,
-
-        0.759, 1.0,
-        0.561, 1.0,
-        0.652, 0.201,
         0.589, 0.192,
+        0.571, 1.0,
+        0.759, 1.0,
+        0.652, 0.201,
 
-        0.561, 1.0,
+        0.397, 0.14,
         0.268, 0.95,
+        0.571, 1.0,
         0.589, 0.192,
-        0.395, 0.153,
 
+        0.661, 0.148,
+        0.652, 0.201,
+        1.0, 0.242,
+        1.0, 0.191,
+
+        0.404, 0.091,
+        0.397, 0.14,
         0.589, 0.192,
-        0.395, 0.153,
         0.597, 0.137,
-        0.402, 0.105,
 
-        0.597, 0.137,
-        0.402, 0.105,
-        0.657, 0.0,
         0.419, 0.0,
+        0.404, 0.091,
+        1.0, 0.191,
+        1.0, 0.0,
 
-        0.054, 1.0,
+        0.0, 0.077,
         0.0, 1.0,
+        0.054, 1.0,
         0.054, 0.086,
-        0.0, 0.078,
 
-        1.0, 1.0,
+        0.556, 0.137,
         0.419, 1.0,
-        1.0, 0.078,
+        1.0, 1.0,
+        1.0, 0.209,
+
         0.576, 0.011,
+        0.556, 0.137,
+        1.0, 0.209,
+        1.0, 0.077,
 
         //Chão Armazem
         0.707, 0.690,
@@ -3551,224 +3690,280 @@ function loadTabernaeTex(posx, posy, posz, rotation) {
         0.0, 0.491,
 
         //Parede Externa Esquerda
+        0.07, 0.011,
         0.562, 0.093,
+        0.0, 0.43,
         0.562, 0.547,
-        0.070, 0.011,
-        0.0, 0.430,
 
+        0.0, 0.43,
         0.562, 0.547,
-        0.562, 1.0,
-        0.0, 0.430,
         0.0, 1.0,
-
-
-        1.0, 0.430,
-        1.0, 0.0,
-        0.904, 0.0,
-
-
-        0.562, 0.0,
         0.562, 1.0,
-        0.222, 0.0,
-        0.052, 1.0,
 
-        0.222, 0.0,
-        0.052, 1.0,
+
         0.0, 0.0,
-        0.0, 0.990,
-        
-
-        1.0, 0.0,
-        0.991, 0.988,
-        0.904, 0.0,
-        0.745, 0.946,
-
-        0.991, 0.988,
-        0.989, 1.0,
-        0.745, 0.946,
-        0.736, 1.0,
-        
-
-        0.989, 0.0,
-        0.985, 0.025,
-        0.736, 0.0,
-        0.694, 0.248,
-
-        1.0, 0.028,
-        1.0, 0.3,
-        0.985, 0.025,
-        0.694, 0.248,
-        
-
         0.562, 0.0,
-        0.562, 0.179,
-        0.052, 0.0,
+        0.0, 0.99,
+        0.562, 0.964,
+
+        0.0, 0.99,
+        0.562, 0.964,
+        0.063, 1.0,
+        0.562, 1.0,
+
+
+        0.904, 0.0,
+        1.0, 0.0,
+        0.745, 0.946,
+        1.0, 0.99,
+
+
+        0.562, 0.392,
+        0.002, 0.3,
+        0.052, 0.0, 
+        0.562, 0.0,
+
+        0.0, 0.3,
+        0.0, 0.028,
         0.046, 0.036,
 
-        0.562, 0.179,
-        0.562, 0.435,
-        0.0, 0.028,
-        0.0, 0.3,
-
-        0.562, 0.435,
         0.562, 1.0,
-        0.248, 0.341,
         0.137, 1.0,
-        
+        0.248, 0.341,
+        0.562, 0.435,
 
-        0.562, 0.0,
         0.562, 0.478,
-        0.137, 0.0,
         0.070, 0.399,
+        0.137, 0.0,
+        0.562, 0.0,
+
+        0.052, 1.0,
+        0.052, 0.999,
+        0.063, 1.0,
+
+        0.989, 1.0,
+        0.736, 1.0,
+        0.745, 0.946,
+        0.991, 0.988,
+
+        1.0, 0.3,
+        0.694, 0.248,
+        0.985, 0.025,
+        1.0, 0.028,
+
+        //Parede Externa Direita
+        0.0, 0.443,
+        0.0, 0.0,
+        0.431, 0.0,
+        0.431, 0.383,
+
+        0.908, 0.456,
+        0.843, 0.0,
+        1.0, 0.0,
+        1.0, 0.443,
+
+        0.0, 1.0,
+        0.0, 0.12,
+        0.431, 0.124,
+        0.431, 1.0,
+
+        0.036, 0.116,
+        0.027, 0.066,
+        0.431, 0.087,
+        0.431, 0.124,
+
+        0.0, 0.07,
+        0.0, 0.0,
+        0.431, 0.0,
+        0.431, 0.087,
+
+        0.843, 1.0,
+        0.728, 0.206,
+        1.0, 0.12,
+        1.0, 1.0,
+
+        0.728, 0.206,
+        0.723, 0.17,
+        0.96, 0.09,
+        0.965, 0.124,
+
+        0.958, 0.074,
+        0.919, 0.0,
+        1.0, 0.0,
+        1.0, 0.070,
+
+        0.0, 1.0,
+        0.0, 0.157,
+        0.431, 0.098,
+        0.431, 1.0,
+
+        0.118, 0.143,
+        0.094, 0.0,
+        0.431, 0.0,
+        0.431, 0.098,
+
+        0.919, 1.0,
+        0.584, 0.206,
+        1.0, 0.157,
+        1.0, 1.0,
+
+        0.094, 1.0,
+        0.0, 0.439,
+        0.431, 0.368,
+        0.431, 1.0,
+
+        0.0, 0.439,
+        0.0, 0.08,
+        0.431, 0.011,
+        0.431, 0.368,
     ];
     let uvs = new Float32Array(quad_uvs);
     geometry.setAttribute( 'uv', new THREE.BufferAttribute( uvs, 2 ) );
-    
     geometry.computeVertexNormals();
     //0 - 1001
     let mat1 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1001.png")});
-    //mat1.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat1.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat1.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1001.png");
+    mat1.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1001.png");
     //1 - 1002
     let mat2 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1002.png")});
-    //mat2.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat2.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat2.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1002.png");
+    mat2.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1002.png");
     //2 - 1003
     let mat3 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1003.png")});
-    //mat3.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat3.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat3.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1003.png");
+    mat3.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1003.png");
     //3 - 1004
     let mat4 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1004.png")});
-    //mat4.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat4.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat4.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1004.png");
+    mat4.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1004.png");
     //4 - 1005
     let mat5 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1005.png")});
-    //mat5.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat5.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat5.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1005.png");
+    mat5.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1005.png");
     //5 - 1006
     let mat6 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1006.png")});
-    //mat6.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat6.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat6.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1006.png");
+    mat6.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1006.png");
     //6 - 1011
     let mat7 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1011.png")});
-    //mat7.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat7.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat7.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1011.png");
+    mat7.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1011.png");
     //7 - 1012
     let mat8 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1012.png")});
-    //mat8.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat8.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat8.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1012.png");
+    mat8.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1012.png");
     //8 - 1013
     let mat9 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1013.png")});
-    //mat9.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat9.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat9.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1013.png");
+    mat9.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1013.png");
     //9 - 1014
     let mat10 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1014.png")});
-    //mat10.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat10.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat10.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1014.png");
+    mat10.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1014.png");
     //10 - 1015
     let mat11 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1015.png")});
-    //mat11.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat11.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat11.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1015.png");
+    mat11.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1015.png");
     //11 - 1016
     let mat12 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1016.png")});
-    //mat12.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat12.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat12.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1016.png");
+    mat12.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1016.png");
     //12 - 1021
     let mat13 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1021.png")});
-    //mat13.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat13.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat13.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1021.png");
+    mat13.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1021.png");
     //13 - 1022
     let mat14 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1022.png")});
-    //mat14.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat14.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat14.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1022.png");
+    mat14.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1022.png");
     //14 - 1023
     let mat15 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1023.png")});
-    //mat15.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat15.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat15.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1023.png");
+    mat15.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1023.png");
     //15 - 1024
     let mat16 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1024.png")});
-    //mat16.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat16.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat16.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1024.png");
+    mat16.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1024.png");
     //16 - 1025
     let mat17 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1025.png")});
-    //mat17.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat17.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat17.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1025.png");
+    mat17.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1025.png");
     //17 - 1026
     let mat18 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1026.png")});
-    //mat18.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat18.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat18.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1026.png");
+    mat18.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1026.png");
     //18 - 1031
     let mat19 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1031.png")});
-    //mat19.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat19.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat19.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1031.png");
+    mat19.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1031.png");
     //19 - 1032
     let mat20 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1032.png")});
-    //mat20.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat20.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat20.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1032.png");
+    mat20.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1032.png");
     //20 - 1033
     let mat21 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1033.png")});
-    //mat21.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat21.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat21.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1033.png");
+    mat21.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1033.png");
     //21 - 1034
     let mat22 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1034.png")});
-    //mat22.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat22.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat22.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1034.png");
+    mat22.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1034.png");
     //22 - 1035
     let mat23 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1035.png")});
-    //mat23.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat23.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat23.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1035.png");
+    mat23.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1035.png");
     //23 - 1036
     let mat24 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1036.png")});
-    //mat24.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat24.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat24.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1036.png");
+    mat24.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1036.png");
     //24 - 1041
     let mat25 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1041.png")});
-    //mat25.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat25.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat25.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1041.png");
+    mat25.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1041.png");
     //25 - 1042
     let mat26 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1042.png")});
-    //mat26.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat26.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat26.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1042.png");
+    mat26.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1042.png");
     //26 - 1043
     let mat27 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1043.png")});
-    //mat27.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat27.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat27.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1043.png");
+    mat27.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1043.png");
     //27 - 1044
     let mat28 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1044.png")});
-    //mat28.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat28.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat28.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1044.png");
+    mat28.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1044.png");
     //28 - 1045
     let mat29 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1045.png")});
-    //mat29.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat29.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat29.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1045.png");
+    mat29.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1045.png");
     //29 - 1046
     let mat30 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1046.png")});
-    //mat30.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat30.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat30.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1046.png");
+    mat30.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1046.png");
     //30 - 1051
     let mat31 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1051.png")});
-    //mat31.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat31.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat31.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1051.png");
+    mat31.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1051.png");
     //31 - 1052
     let mat32 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1052.png")});
-    //mat32.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat32.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat32.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1052.png");
+    mat32.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1052.png");
     //32 - 1053
     let mat33 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1053.png")});
-    //mat33.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat33.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat33.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1053.png");
+    mat33.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1053.png");
     //33 - 1054
     let mat34 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1054.png")});
-    //mat34.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat34.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat34.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1054.png");
+    mat34.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1054.png");
     //34 - 1055
     let mat35 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1055.png")});
-    //mat35.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat35.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat35.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1055.png");
+    mat35.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1055.png");
     //35- 1056
     let mat36 = new THREE.MeshPhongMaterial({map: new THREE.TextureLoader().load("../images/Tabernae/ColorMapTabernae.1056.png")});
-    //mat36.normalMap = new THREE.TextureLoader().load("../images/Biombo/normalMapBiombo.1001.png");
-    //mat36.bumpMap = new THREE.TextureLoader().load("../images/Biombo/roughnessMapBiombo.1001.png");
+    mat36.normalMap = new THREE.TextureLoader().load("../images/Tabernae/normalMapTabernae.1056.png");
+    mat36.bumpMap = new THREE.TextureLoader().load("../images/Tabernae/roughnessMapTabernae.1056.png");
 
     var materials = [
         mat1,
@@ -3814,6 +4009,7 @@ function loadTabernaeTex(posx, posy, posz, rotation) {
     plane.position.set(posx, posy, posz)
     scene.add(plane);
     objects.push(plane)
+    console.log(plane)
 }
 
 function loadTelhas() {
@@ -3837,7 +4033,7 @@ function loadTelhas() {
                 for (var i = 0; i != 35; i++) {
                     for (var j = 0; j != 38; j++) {
                         let clone = child.clone();
-                        var movement = new Vector3(i * 0.297, (j * 0.36) * 0.0005, -j * 0.36).applyQuaternion(child.quaternion);
+                        var movement = new Vector3(i * 0.297, (j * 0.36) * 0.00025, -j * 0.36).applyQuaternion(child.quaternion);
                         clone.quaternion.copy(child.quaternion);
                         clone.position.copy(child.position).add(movement);
                         scene.add(clone);
@@ -4065,21 +4261,35 @@ function generateWalls() {
 function generateHotSpot(positionx, positiony, positionz, rotation, text) {
     var rot = rotation * (Math.PI / 180);
 
-    var hotspot = document.createElement('canvas');
-    var g = hotspot.getContext('2d');
-    hotspot.width = 800;
-    hotspot.height = 300;
-    g.font = '20px Arial';
 
-    g.fillStyle = 'white';
-    g.fillText(text, 0, 100);
-    g.strokeStyle = 'white';
-    g.strokeText(text, 0, 100);
+    var hotspot = document.createElement('canvas');
+    hotspot.width = 2000;
+    hotspot.height = text.length * 60;
+    var g = hotspot.getContext('2d');
+    g.textAlign = "center";
+    g.textBaseline = "middle"; 
+    g.font = '50px sans-serif';
+    if(text.length > 1){
+        let i = 40;
+        text.forEach(function(text) {
+            g.fillStyle = 'white';
+            g.fillText(text, 1000, i, text.length*100);
+            g.strokeStyle = 'white';
+            g.strokeText(text, 1000, i, text.length*100);
+            console.log(i);
+            i += 50;
+        })
+    } else {
+        g.fillStyle = 'white';
+        g.fillText(text, 800, 30, 750);
+        g.strokeStyle = 'white';
+        g.strokeText(text, 800, 30, 750);
+    }
 
     var texture = new THREE.Texture(hotspot);
     texture.needsUpdate = true;
 
-    var geometry = new THREE.PlaneGeometry(1, 1);
+    var geometry = new THREE.PlaneGeometry(1.5, 0.5);
     var material = new THREE.MeshPhongMaterial({ map: texture });
 
     var meshText = new THREE.Mesh(geometry, material)
@@ -4089,13 +4299,11 @@ function generateHotSpot(positionx, positiony, positionz, rotation, text) {
 
     scene.add(meshText);
 
-    positionx += 0.1;
-
     texture = new THREE.TextureLoader().load('../images/info.png');
     material = new THREE.MeshBasicMaterial({
         map: texture
     });
-    geometry = new THREE.CircleGeometry(0.8, 32);
+    geometry = new THREE.CircleGeometry(0.5, 32);
     var mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(positionx, positiony, positionz);
 
@@ -4233,6 +4441,7 @@ function animate(nebula, app) {
     objectsHotspot.forEach(object => {
         if (hotSpotMap.get(object).visible && controls.getObject().position.distanceTo(hotSpotMap.get(object).position) > 10) {
             hotSpotMap.get(object).visible = false;
+            object.visible = true;
         }
     });
 
@@ -4343,7 +4552,11 @@ function animate(nebula, app) {
         controls.getObject().position.setY(20);
     }
 
-    lucernaFollow(nebula);
+    lucernaTimer++;
+
+    if(lucernaTimer > 1000){
+        lucernaFollow(nebula);
+    }
 
     prevTime = time;
 
