@@ -120,6 +120,7 @@
 </head>
 
 <body>
+	<?php header("Access-Control-Allow-Header: *"); ?>
 	<div id="blocker">
 		<div id="instructions">
 			<p style="font-size:36px">
@@ -134,7 +135,6 @@
 		</div>
 	</div>
 	<div id="snackbar">Já estas a passar dos limites! Este é o fim do teu mundo virtual.</div>
-	<script src="test.php"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/109/three.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r16/Stats.min.js"></script>
 	<script src="dist/my-first-webpack.bundle.js"></script>
